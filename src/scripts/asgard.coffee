@@ -27,7 +27,7 @@ eco = require "eco"
 fs  = require "fs"
 
 getTemplate = (templateItem) ->
-  return fs.readFileSync __dirname + "../templates/asgard-#{templateItem}.eco", "utf-8"
+  return fs.readFileSync __dirname + "/../templates/asgard-#{templateItem}.eco", "utf-8"
 
 asgardGet = (msg, url, templateItem) ->
   msg.http(url)
@@ -37,7 +37,6 @@ asgardGet = (msg, url, templateItem) ->
       msg.send response dataArray, getTemplate templateItem
 
 response = (dataIn, template) ->
-  console.log dataIn
   return eco.render template, data: dataIn
 
 module.exports = (robot) ->
@@ -65,13 +64,19 @@ module.exports = (robot) ->
 
   robot.hear /^asgard instance (i-[a-f0-9]{8})$/, (msg) ->
     url = "#{baseUrl}/#{region}/instance/show/#{msg.match[1]}.json"
-    asgardGet msg, url, 'instance-full'
+    asgardGet msg, url, 'instance-single'
 
   robot.hear /^asgard autoscaling ([a-z]+)$/, (msg) ->
     url = "#{baseUrl}/#{region}/autoScaling/show/#{msg.match[1]}.json"
     asgardGet msg, url, 'autoscaling'
 
-  robot.hear /^asgard cluster ([\w\d]+)$/, (msg) ->
-    url = "#{baseUrl}/#{region}/cluster/show/#{msg.match[1]}.json"
-    asgardGet msg, url, 'cluster'
+  robot.hear /^asgard cluster( [\w\d]+)?$/, (msg) ->
+    url = "#{baseUrl}/#{region}/cluster/list.json"
+    tpl = 'cluster'
+
+    if msg.match[2]
+      url = "#{baseUrl}/#{region}/cluster/show/#{msg.match[1]}.json"
+      tpl = 'cluster-single'
+
+    asgardGet msg, url, tpl
 

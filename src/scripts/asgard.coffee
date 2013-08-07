@@ -10,13 +10,15 @@
 #   process.env.HUBOT_ASGARD_REGION or us-east-1
 #
 # Commands:
-#   asgard url URL - Set/update the asgard base url
-#   asgard region [REGION] - Get the current region, or persist a region
+#   asgard url [URL] - Get/set the asgard base url
+#   asgard region [REGION] - Get/set the asgard region
 #   asgard instance - List instances per region
 #   asgard instance APP - List instances per app per region
 #   asgard instance ID - Show details for instance ID (i-[a-f0-9])
 #   asgard autoscaling NAME - Show details for autoscaling group NAME
 #   asgard cluster NAME - Show details for cluster NAME
+#   asgard ami - List AMIs per region (careful if public enabled) 
+#
 
 baseUrl = process.env.HUBOT_ASGARD_URL or 'http://127.0.0.1'
 region = process.env.HUBOT_ASGARD_REGION or 'us-east-1'

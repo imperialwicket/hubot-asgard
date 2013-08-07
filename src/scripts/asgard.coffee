@@ -46,14 +46,14 @@ module.exports = (robot) ->
       baseUrl = msg.match[2]
       robot.brain.set 'asgardUrl', baseUrl
 
-    msg.send 'URL is #{baseUrl}.'
+    msg.send "URL is #{baseUrl}."
 
   robot.hear /^asgard region( ([\w-]+))?$/, (msg) ->
     if msg.match[2]
       region = msg.match[2]
       robot.brain.set 'asgardRegion', region
 
-    msg.send 'Region is #{region}.'
+    msg.send "Region is #{region}."
 
   robot.hear /^asgard instance$/, (msg) ->
     url = baseUrl + '/' + region + '/instance/list.json'

@@ -1,10 +1,6 @@
-<% if @data.length: %><% for i in @data: %>
-  InstanceId: <%= i.instanceId %>
-  AppName(instance): <%= i.appName %>(<%= i.appInstance %>)
-  PrivateDns: <%= i.ec2Instance.privateDnsName %>
-  PublicDns: <%= i.ec2Instance.publicDnsName %>
-  Status: <%= i.ec2Instance.state.name %>
+<% if @data.length: %><% for c in @data: %>
   <% end %>
 <% else: %>
-  No instances
+  No .
 <% end %>
+

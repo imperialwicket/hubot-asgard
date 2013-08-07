@@ -66,11 +66,11 @@ module.exports = (robot) ->
     url = "#{baseUrl}/#{region}/instance/show/#{msg.match[1]}.json"
     asgardGet msg, url, 'instance-single'
 
-  robot.hear /^asgard autoscaling ([a-z]+)$/, (msg) ->
+  robot.hear /^asgard autoscaling ([\w\d]+)$/, (msg) ->
     url = "#{baseUrl}/#{region}/autoScaling/show/#{msg.match[1]}.json"
     asgardGet msg, url, 'autoscaling'
 
-  robot.hear /^asgard cluster( [\w\d]+)?$/, (msg) ->
+  robot.hear /^asgard cluster( [\w\d-]+)?$/, (msg) ->
     url = "#{baseUrl}/#{region}/cluster/list.json"
     tpl = 'cluster'
 

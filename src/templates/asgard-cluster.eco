@@ -1,9 +1,6 @@
-<% if @data.length: %><% for i in @data: %>
-  InstanceId: <%= i.instanceId %>
-  AppName(instance): <%= i.appName %>(<%= i.appInstance %>)
-  PrivateDns: <%= i.ec2Instance.privateDnsName %>
-  PublicDns: <%= i.ec2Instance.publicDnsName %>
-  Status: <%= i.ec2Instance.state.name %>
+<% if @data.length: %><% for c in @data: %>
+  Cluster: <%= c.cluster %>
+  AutoScalingGroups:<% for a in c.autoScalingGroups: %> <%= a %><% end %>
   <% end %>
 <% else: %>
   No instances

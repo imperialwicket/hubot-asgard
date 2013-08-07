@@ -3,5 +3,5 @@
   AutoScalingGroups:<% for a in c.autoScalingGroups: %> <%= a %><% end %>
   <% end %>
 <% else: %>
-  No instances
+  No clusters.
 <% end %>

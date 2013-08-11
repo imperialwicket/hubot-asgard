@@ -33,7 +33,7 @@ asgardGet = (msg, url, templateItem) ->
   msg.http(url)
     .get() (err, res, body) ->
       data = JSON.parse(body)
-      msg.send response dataArray, getTemplate templateItem
+      msg.send response data, getTemplate templateItem
 
 response = (dataIn, template) ->
   return eco.render template, data: dataIn

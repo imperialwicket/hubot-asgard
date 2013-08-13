@@ -30,11 +30,18 @@ getBaseUrl = ->
   separator = if (asgardUrl.slice(-1)) == '/' then '' else '/'
   return asgardUrl + separator + region + '/'
 
+getCamel = (asgardItem) ->
+  camel = switch
+    when asgardItem == 'autoscaling' then 'autoScaling'
+    when asgardItem == 'loadbalancer' then 'loadBalancer'
+    else asgardItem
+
 getTemplate = (templateItem) ->
   path = "/../templates/asgard-#{templateItem}.eco"
   return fs.readFileSync __dirname + path, "utf-8"
 
 asgardGet = (msg, path, templateItem) ->
+  console.log(getBaseUrl() + path
   msg.http(getBaseUrl() + path)
     .get() (err, res, body) ->
       data = JSON.parse(body)
@@ -44,21 +51,21 @@ response = (dataIn, template) ->
   return eco.render template, data: dataIn
 
 module.exports = (robot) ->
-  #TODO
   robot.hear /^asgard ami/, (msg) ->
     path = 'image/list.json'
     asgardGet msg, path, 'ami'
 
-  robot.hear /^asgard autoscaling ([\w\d]+)$/, (msg) ->
-    path = "autoScaling/show/#{msg.match[1]}.json"
-    asgardGet msg, path, 'autoscaling'
+  robot.hear /^asgard (autoscaling|cluster)( ([\w\d]+))?$/, (msg) ->
+    path = tpl = getCamel msg.match[1]
+    path += if msg.match[2] then "/show/#msg.match[3]}.json" else '/list.json'
+    asgardGet msg, path, tpl
 
   #TODO
-  robot.hear /^asgard cluster( [\w\d-]+)?$/, (msg) ->
+  robot.hear /^asgard cluster( ([\w\d-]+))?$/, (msg) ->
     path = 'cluster/'
     tpl = 'cluster'
-    path += if (msg.match[1]) then "show/#{msg.match[1]}.json" else 'list.json'
-    tpl += if (msg.match[1]) then '-single' else ''
+    path += if (msg.match[2]) then "show/#{msg.match[2]}.json" else 'list.json'
+    tpl += if (msg.match[2]) then '-single' else ''
     asgardGet msg, path, tpl
 
   robot.hear /^asgard region( ([\w-]+))?$/, (msg) ->

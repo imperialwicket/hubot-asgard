@@ -1,6 +1,0 @@
-<% if @data.length: %><% for c in @data: %>
-  <% end %>
-<% else: %>
-  No .
-<% end %>
-

@@ -1,0 +1,10 @@
+<% if @data.length: %><% for i in @data: %>
+  AsgName: <%= i.autoScalingGroupName %>
+  Min/Des/Max: <%= i.minSize %>/<%= i.desiredCapacity %>/<%= i.maxSize %>
+  Zones: <% for z in i.availabilityZones: %> <%= z %>;<% end %>
+  LaunchConfig: <%= i.launchConfigurationName %> 
+  <% end %>
+<% else: %>
+  No Autoscaling groups.
+<% end %>
+

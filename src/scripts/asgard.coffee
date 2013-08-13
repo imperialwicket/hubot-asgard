@@ -11,14 +11,15 @@
 #
 # Commands:
 #   asgard ami - List AMIs per region (careful if public enabled)
-#   asgard autoscaling NAME - Show details for autoscaling group NAME
-#   asgard cluster NAME - Show details for cluster NAME
+#   asgard ami <id> - Show details for ami ID (ami-[a-f0-9]{8})
+#   asgard autoscaling <name> - Show details for autoscaling group <name>
+#   asgard cluster <name> - Show details for cluster <name>
 #   asgard instance - List instances per region
-#   asgard instance APP - List instances per app per region
-#   asgard instance ID - Show details for instance ID (i-[a-f0-9])
+#   asgard instance <app> - List instances per <app> per region
+#   asgard instance <id> - Show details for instance <id> (i-[a-f0-9]{8})
 #   asgard loadbalancer - List loadbalancers per region
-#   asgard region [REGION] - Get/set the asgard region
-#   asgard url [URL] - Get/set the asgard base url
+#   asgard region <region> - Get/set the asgard region
+#   asgard url <url> - Get/set the asgard base url
 #
 
 asgardUrl = process.env.HUBOT_ASGARD_URL or 'http://127.0.0.1'

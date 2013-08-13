@@ -30,13 +30,14 @@ getBaseUrl = ->
   separator = if (asgardUrl.slice(-1)) == '/' then '' else '/'
   return asgardUrl + separator + region + '/'
 
-getCamel = (asgardItem) ->
-  camel = switch
-    when asgardItem == 'autoscaling' then 'autoScaling'
-    when asgardItem == 'loadbalancer' then 'loadBalancer'
-    else asgardItem
+getAsgardName = (botName) ->
+  asgardName = switch
+    when botName == 'ami' then 'image'
+    when botName == 'autoscaling' then 'autoScaling'
+    when botName == 'loadbalancer' then 'loadBalancer'
+    else botName
 
-  return camel
+  return asgardName
 
 getTemplate = (templateItem) ->
   path = "/../templates/asgard-#{templateItem}.eco"

@@ -16,6 +16,7 @@
 #   asgard instance - List instances per region
 #   asgard instance APP - List instances per app per region
 #   asgard instance ID - Show details for instance ID (i-[a-f0-9])
+#   asgard loadbalancer - List loadbalancers per region
 #   asgard region [REGION] - Get/set the asgard region
 #   asgard url [URL] - Get/set the asgard base url
 #
@@ -53,12 +54,12 @@ response = (dataIn, template) ->
   return eco.render template, data: dataIn
 
 module.exports = (robot) ->
-  robot.hear /^asgard ami/, (msg) ->
-    path = 'image/list.json'
-    asgardGet msg, path, 'ami'
+  robot.hear /^asgard (ami|instance|loadbalancer)/, (msg) ->
+    item = getAsgardName msg.match[1]
+    asgardGet msg, item + '/list.json', item
 
   robot.hear /^asgard (autoscaling|cluster)( ([\w\d-]+))?$/, (msg) ->
-    path = tpl = getCamel msg.match[1]
+    path = tpl = getAsgardName msg.match[1]
     path += if msg.match[2] then "/show/#msg.match[3]}.json" else '/list.json'
     asgardGet msg, path, tpl
 
@@ -73,22 +74,21 @@ module.exports = (robot) ->
 
     msg.send "Region is #{region}."
 
-  robot.hear /^asgard instance$/, (msg) ->
-    path = 'instance/list.json'
-    asgardGet msg, path, 'instance'
+  # Ami
+  robot.hear /^asgard ami (ami-[a-f0-9]{8})$/, (msg) ->
+    item = getAsgardName msg.match[1]
+    path = item + "/show/#msg.match[1]}.json"
+    asgardGet msg, path, item
 
+  # Instace APP
   robot.hear /^asgard instance ([a-zA-Z0-9]+)$/, (msg) ->
     path = "instance/list/#{msg.match[1]}.json"
     asgardGet msg, path, 'instance'
 
+  # Instance ID
   robot.hear /^asgard instance (i-[a-f0-9]{8})$/, (msg) ->
     path = "instance/show/#{msg.match[1]}.json"
-    asgardGet msg, path, 'instance-single'
-
-  #TODO
-  robot.hear /^asgard loadbalancer$/, (msg) ->
-    path = "loadBalancer/list.json"
-    asgardGet msg, path, 'loadbalancer'
+    asgardGet msg, path, 'instance'
 
   robot.hear /^asgard url( (.*))?$/, (msg) ->
     if msg.match[2]

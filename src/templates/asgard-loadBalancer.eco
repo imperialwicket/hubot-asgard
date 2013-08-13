@@ -1,0 +1,20 @@
+<% if @data.length: %><% for i in @data: %>
+  ELB Name: <%= i.loadBalancerName %>
+  DNS: <%= i.DNSName %>
+  ZoneNameID: <%= i.canonicalHostedZoneNameID %>
+  <% end %>
+<% else if @data.loadBalancer: %>
+  ELB Name: <%= @data.loadBalancer.loadBalancerName %>
+  DNS: <%= @data.loadBalancer.DNSName %>
+  Zones: <% for z in @data.loadBalancer.availabilityZones: %> <%= z %>;<% end %>
+  App(owner): <%= @data.loadBalancer.app.name %> (<%= @data.loadBalancer.app.email %>)
+  Clusters: <% for c in @data.loadBalancer.clusters: %> <%= c %>;<% end %>
+  ASGs:<% for a in @data.loadBalancer.groups: %>
+    <%= a.autoscalingGroupName %>:
+      <% if a.instances.length: %><% for i in a.instances: %>
+      <%= i.instanceId %> (<%= i.availabilityZone %>): <%= i.healthStatus %>
+     <% end %>
+  <% end %>
+<% else if @data.error: %>
+  Error: <%= @data.error %>
+<% end %>

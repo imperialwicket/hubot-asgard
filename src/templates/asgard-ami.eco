@@ -1,0 +1,8 @@
+<% if @data.length: %><% for i in @data: %>
+  Ami id: <%= i.imageId %>
+  Name: <%= i.name %>
+  Tags: <% for t in i.tags: %> <%= t.key %>: <%= t.value %>;<% end %>
+  <% end %>
+<% else: %>
+  No amis.
+<% end %>

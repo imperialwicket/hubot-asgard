@@ -3,31 +3,36 @@
 #   Asgard instance via API.
 #
 # Dependencies:
-#   eco (>= 1.1.0) 
+#   eco (>= 1.1.0)
 #
 # Configuration:
 #   process.env.HUBOT_ASGARD_URL or http://127.0.0.1/
 #   process.env.HUBOT_ASGARD_REGION or us-east-1
 #
 # Commands:
-#   asgard url [URL] - Get/set the asgard base url
-#   asgard region [REGION] - Get/set the asgard region
+#   asgard ami - List AMIs per region (careful if public enabled)
+#   asgard autoscaling NAME - Show details for autoscaling group NAME
+#   asgard cluster NAME - Show details for cluster NAME
 #   asgard instance - List instances per region
 #   asgard instance APP - List instances per app per region
 #   asgard instance ID - Show details for instance ID (i-[a-f0-9])
-#   asgard autoscaling NAME - Show details for autoscaling group NAME
-#   asgard cluster NAME - Show details for cluster NAME
-#   asgard ami - List AMIs per region (careful if public enabled) 
+#   asgard region [REGION] - Get/set the asgard region
+#   asgard url [URL] - Get/set the asgard base url
 #
 
-baseUrl = process.env.HUBOT_ASGARD_URL or 'http://127.0.0.1'
+asgardUrl = process.env.HUBOT_ASGARD_URL or 'http://127.0.0.1'
 region = process.env.HUBOT_ASGARD_REGION or 'us-east-1'
 
 eco = require "eco"
 fs  = require "fs"
 
+getBaseUrl = ->
+  separator = if (asgardUrl.slice(-1)) == '/' then '' else '/'
+  return asgardUrl + separator + region + '/'
+
 getTemplate = (templateItem) ->
-  return fs.readFileSync __dirname + "/../templates/asgard-#{templateItem}.eco", "utf-8"
+  path = "/../templates/asgard-#{templateItem}.eco"
+  return fs.readFileSync __dirname + path, "utf-8"
 
 asgardGet = (msg, url, templateItem) ->
   msg.http(url)
@@ -39,12 +44,22 @@ response = (dataIn, template) ->
   return eco.render template, data: dataIn
 
 module.exports = (robot) ->
-  robot.hear /^asgard url( (.*))?$/, (msg) ->
-    if msg.match[2]
-      baseUrl = msg.match[2]
-      robot.brain.set 'asgardUrl', baseUrl
+  #TODO
+  robot.hear /^asgard ami/, (msg) ->
+    url = getBaseUrl() + 'image/list.json'
+    asgardGet msg, url, 'ami'
 
-    msg.send "URL is #{baseUrl}."
+  robot.hear /^asgard autoscaling ([\w\d]+)$/, (msg) ->
+    url = getBaseUrl() + "autoScaling/show/#{msg.match[1]}.json"
+    asgardGet msg, url, 'autoscaling'
+
+  #TODO
+  robot.hear /^asgard cluster( [\w\d-]+)?$/, (msg) ->
+    url = getBaseUrl() + 'cluster/'
+    tpl = 'cluster'
+    url += if (msg.match[1]) then "show/#{msg.match[1]}.json" else 'list.json'
+    tpl += if (msg.match[1]) then '-single' else ''
+    asgardGet msg, url, tpl
 
   robot.hear /^asgard region( ([\w-]+))?$/, (msg) ->
     if msg.match[2]
@@ -54,28 +69,25 @@ module.exports = (robot) ->
     msg.send "Region is #{region}."
 
   robot.hear /^asgard instance$/, (msg) ->
-    url = baseUrl + '/' + region + '/instance/list.json'
+    url = getBaseUrl() + 'instance/list.json'
     asgardGet msg, url, 'instance'
 
   robot.hear /^asgard instance ([a-zA-Z0-9]+)$/, (msg) ->
-    url = "#{baseUrl}/#{region}/instance/list/#{msg.match[1]}.json"
+    url = getBaseUrl() + "instance/list/#{msg.match[1]}.json"
     asgardGet msg, url, 'instance'
 
   robot.hear /^asgard instance (i-[a-f0-9]{8})$/, (msg) ->
-    url = "#{baseUrl}/#{region}/instance/show/#{msg.match[1]}.json"
+    url = getBaseUrl() + "instance/show/#{msg.match[1]}.json"
     asgardGet msg, url, 'instance-single'
 
-  robot.hear /^asgard autoscaling ([\w\d]+)$/, (msg) ->
-    url = "#{baseUrl}/#{region}/autoScaling/show/#{msg.match[1]}.json"
-    asgardGet msg, url, 'autoscaling'
+  #TODO
+  robot.hear /^asgard loadbalancer$/, (msg) ->
+    url = getBaseUrl() + "loadBalancer/list.json"
+    asgardGet msg, url, 'loadbalancer'
 
-  robot.hear /^asgard cluster( [\w\d-]+)?$/, (msg) ->
-    url = "#{baseUrl}/#{region}/cluster/list.json"
-    tpl = 'cluster'
-
+  robot.hear /^asgard url( (.*))?$/, (msg) ->
     if msg.match[2]
-      url = "#{baseUrl}/#{region}/cluster/show/#{msg.match[1]}.json"
-      tpl = 'cluster-single'
+      asgardUrl = msg.match[2]
+      robot.brain.set 'asgardUrl', asgardUrl
 
-    asgardGet msg, url, tpl
-
+    msg.send "URL is #{asgardUrl}."

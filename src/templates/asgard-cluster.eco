@@ -1,7 +1,15 @@
-<% if @data.length: %><% for c in @data: %>
+<% if @data.cluster: %><% for c in @data: %>
   Cluster: <%= c.cluster %>
   AutoScalingGroups:<% for a in c.autoScalingGroups: %> <%= a %><% end %>
   <% end %>
+<% else if @data.class: %><% for c in @data: %>
+  Name: <%= c.autoScalingGroupName %>
+  Instances (current/max): <%= c.instances.length %>/<%= c.maxSize %>
+  LC: <%= c.launchConfigurationName %>
+  <% end %>
+<% else if @data.error: %>
+  Error: <%= @data.error %>
 <% else: %>
-  No clusters.
+  Unknown response (This is probably a hubot-asgard bug).
 <% end %>
+

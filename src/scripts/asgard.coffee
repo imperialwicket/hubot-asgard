@@ -82,18 +82,18 @@ module.exports = (robot) ->
   # Instace APP (Eureka dependent)
   robot.hear /^(asgard|a) (instance|i) ([a-zA-Z0-9]+)$/, (msg) ->
     item = getAsgardName msg.match[3]
-    path = item + "/list/#{msg.match[1]}.json"
+    path = item + "/list/#{msg.match[3]}.json"
     asgardGet msg, path, item
 
   # Instance ID
   robot.hear /^(asgard|a) (instance|i) (i-[a-f0-9]{8})$/, (msg) ->
     item = getAsgardName msg.match[3]
-    path = item + "/show/#{msg.match[1]}.json"
+    path = item + "/show/#{msg.match[3]}.json"
     asgardGet msg, path, item
 
-  robot.hear /^asgard url( (.*))?$/, (msg) ->
-    if msg.match[2]
-      asgardUrl = msg.match[2]
+  robot.hear /^(asgard|a) url( (.*))?$/, (msg) ->
+    if msg.match[3]
+      asgardUrl = msg.match[3]
       robot.brain.set 'asgardUrl', asgardUrl
 
     msg.send "URL is #{asgardUrl}."

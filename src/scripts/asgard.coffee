@@ -54,17 +54,13 @@ response = (dataIn, template) ->
   return eco.render template, data: dataIn
 
 module.exports = (robot) ->
-  robot.hear /^asgard (ami|instance|loadbalancer)/, (msg) ->
+  robot.hear /^asgard (ami|instance|loadbalancer)$/, (msg) ->
     item = getAsgardName msg.match[1]
     asgardGet msg, item + '/list.json', item
 
-  robot.hear /^asgard (autoscaling|cluster)( ([\w\d-]+))?$/, (msg) ->
+  robot.hear /^asgard (autoscaling|cluster|loadbalancer)( ([\w\d-]+))?$/, (msg) ->
     path = tpl = getAsgardName msg.match[1]
-    path += if msg.match[2] then "/show/#msg.match[3]}.json" else '/list.json'
-    asgardGet msg, path, tpl
-
-    tpl = 'cluster'
-    path += if (msg.match[2]) then "show/#{msg.match[2]}.json" else 'list.json'
+    path += if msg.match[2] then "/show/#{msg.match[3]}.json" else '/list.json'
     asgardGet msg, path, tpl
 
   robot.hear /^asgard region( ([\w-]+))?$/, (msg) ->

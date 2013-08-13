@@ -4,7 +4,13 @@
   Zones: <% for z in i.availabilityZones: %> <%= z %>;<% end %>
   LaunchConfig: <%= i.launchConfigurationName %> 
   <% end %>
+<% else if @data.clusterName: %>
+  AsgName: <%= @data.clusterName %>
+  App: <%= @data.variables.app %>
+  [Template TODO - more details]]
+<% else if @data.error: %>
+  Error: <%= @data.error %>
 <% else: %>
-  No Autoscaling groups.
+  Unknown response (This is probably a hubot-asgard bug).
 <% end %>
 

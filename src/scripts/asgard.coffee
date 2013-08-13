@@ -34,8 +34,8 @@ getTemplate = (templateItem) ->
   path = "/../templates/asgard-#{templateItem}.eco"
   return fs.readFileSync __dirname + path, "utf-8"
 
-asgardGet = (msg, url, templateItem) ->
-  msg.http(url)
+asgardGet = (msg, path, templateItem) ->
+  msg.http(getBaseUrl() + path)
     .get() (err, res, body) ->
       data = JSON.parse(body)
       msg.send response data, getTemplate templateItem
@@ -46,20 +46,20 @@ response = (dataIn, template) ->
 module.exports = (robot) ->
   #TODO
   robot.hear /^asgard ami/, (msg) ->
-    url = getBaseUrl() + 'image/list.json'
-    asgardGet msg, url, 'ami'
+    path = 'image/list.json'
+    asgardGet msg, path, 'ami'
 
   robot.hear /^asgard autoscaling ([\w\d]+)$/, (msg) ->
-    url = getBaseUrl() + "autoScaling/show/#{msg.match[1]}.json"
-    asgardGet msg, url, 'autoscaling'
+    path = "autoScaling/show/#{msg.match[1]}.json"
+    asgardGet msg, path, 'autoscaling'
 
   #TODO
   robot.hear /^asgard cluster( [\w\d-]+)?$/, (msg) ->
-    url = getBaseUrl() + 'cluster/'
+    path = 'cluster/'
     tpl = 'cluster'
-    url += if (msg.match[1]) then "show/#{msg.match[1]}.json" else 'list.json'
+    path += if (msg.match[1]) then "show/#{msg.match[1]}.json" else 'list.json'
     tpl += if (msg.match[1]) then '-single' else ''
-    asgardGet msg, url, tpl
+    asgardGet msg, path, tpl
 
   robot.hear /^asgard region( ([\w-]+))?$/, (msg) ->
     if msg.match[2]
@@ -69,21 +69,21 @@ module.exports = (robot) ->
     msg.send "Region is #{region}."
 
   robot.hear /^asgard instance$/, (msg) ->
-    url = getBaseUrl() + 'instance/list.json'
-    asgardGet msg, url, 'instance'
+    path = 'instance/list.json'
+    asgardGet msg, path, 'instance'
 
   robot.hear /^asgard instance ([a-zA-Z0-9]+)$/, (msg) ->
-    url = getBaseUrl() + "instance/list/#{msg.match[1]}.json"
-    asgardGet msg, url, 'instance'
+    path = "instance/list/#{msg.match[1]}.json"
+    asgardGet msg, path, 'instance'
 
   robot.hear /^asgard instance (i-[a-f0-9]{8})$/, (msg) ->
-    url = getBaseUrl() + "instance/show/#{msg.match[1]}.json"
-    asgardGet msg, url, 'instance-single'
+    path = "instance/show/#{msg.match[1]}.json"
+    asgardGet msg, path, 'instance-single'
 
   #TODO
   robot.hear /^asgard loadbalancer$/, (msg) ->
-    url = getBaseUrl() + "loadBalancer/list.json"
-    asgardGet msg, url, 'loadbalancer'
+    path = "loadBalancer/list.json"
+    asgardGet msg, path, 'loadbalancer'
 
   robot.hear /^asgard url( (.*))?$/, (msg) ->
     if msg.match[2]

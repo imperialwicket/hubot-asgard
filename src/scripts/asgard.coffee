@@ -32,12 +32,14 @@ getBaseUrl = ->
   separator = if (asgardUrl.slice(-1)) == '/' then '' else '/'
   return asgardUrl + separator + region + '/'
 
-getAsgardName = (botName) ->
+getAsgardName = (name) ->
   asgardName = switch
-    when botName == 'ami' then 'image'
-    when botName == 'autoscaling' then 'autoScaling'
-    when botName == 'loadbalancer' then 'loadBalancer'
-    else botName
+    when name == 'ami' || name == 'a' then 'image'
+    when name == 'autoscaling' || name == 'as' then 'autoScaling'
+    when name == 'loadbalancer' || name == 'lb' then 'loadBalancer'
+    when name == 'i' then 'instance'
+    when name == 'c' then 'cluster'
+    else name
 
   return asgardName
 
@@ -55,37 +57,39 @@ response = (dataIn, template) ->
   return eco.render template, data: dataIn
 
 module.exports = (robot) ->
-  robot.hear /^asgard (ami|instance|loadbalancer)$/, (msg) ->
-    item = getAsgardName msg.match[1]
+  robot.hear /^(asgard|a) (ami|a|instance|i)$/, (msg) ->
+    item = getAsgardName msg.match[2]
     asgardGet msg, item + '/list.json', item
 
-  robot.hear /^asgard (autoscaling|cluster|loadbalancer)( ([\w\d-]+))?$/, (msg) ->
-    path = tpl = getAsgardName msg.match[1]
-    path += if msg.match[2] then "/show/#{msg.match[3]}.json" else '/list.json'
+  robot.hear /^(asgard|a) (autoscaling|as|cluster|c|loadbalancer|lb)( ([\w\d-]+))?$/, (msg) ->
+    path = tpl = getAsgardName msg.match[2]
+    path += if msg.match[4] then "/show/#{msg.match[4]}.json" else '/list.json'
     asgardGet msg, path, tpl
 
-  robot.hear /^asgard region( ([\w-]+))?$/, (msg) ->
-    if msg.match[2]
-      region = msg.match[2]
+  robot.hear /^(asgard|a) region( ([\w-]+))?$/, (msg) ->
+    if msg.match[3]
+      region = msg.match[3]
       robot.brain.set 'asgardRegion', region
 
     msg.send "Region is #{region}."
 
   # Ami
-  robot.hear /^asgard ami (ami-[a-f0-9]{8})$/, (msg) ->
-    item = getAsgardName msg.match[1]
-    path = item + "/show/#msg.match[1]}.json"
+  robot.hear /^(asgard|a) (ami|a) (ami-[a-f0-9]{8})$/, (msg) ->
+    item = getAsgardName msg.match[2]
+    path = item + "/show/#msg.match[3]}.json"
     asgardGet msg, path, item
 
-  # Instace APP
-  robot.hear /^asgard instance ([a-zA-Z0-9]+)$/, (msg) ->
-    path = "instance/list/#{msg.match[1]}.json"
-    asgardGet msg, path, 'instance'
+  # Instace APP (Eureka dependent)
+  robot.hear /^(asgard|a) (instance|i) ([a-zA-Z0-9]+)$/, (msg) ->
+    item = getAsgardName msg.match[3]
+    path = item + "/list/#{msg.match[1]}.json"
+    asgardGet msg, path, item
 
   # Instance ID
-  robot.hear /^asgard instance (i-[a-f0-9]{8})$/, (msg) ->
-    path = "instance/show/#{msg.match[1]}.json"
-    asgardGet msg, path, 'instance'
+  robot.hear /^(asgard|a) (instance|i) (i-[a-f0-9]{8})$/, (msg) ->
+    item = getAsgardName msg.match[3]
+    path = item + "/show/#{msg.match[1]}.json"
+    asgardGet msg, path, item
 
   robot.hear /^asgard url( (.*))?$/, (msg) ->
     if msg.match[2]

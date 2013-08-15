@@ -76,7 +76,7 @@ response = (dataIn, template) ->
   return eco.render template, data: dataIn
 
 module.exports = (robot) ->
-  robot.hear /^(asgard|a) (ami|a|instance|i|application|app)$/, (msg) ->
+  robot.hear /^(asgard|a) (ami|a|instance|i|application|app|task|t)$/, (msg) ->
     item = getAsgardName msg.match[2]
     asgardGet msg, item + '/list.json', item
 
@@ -113,7 +113,7 @@ module.exports = (robot) ->
   # Task ID
   robot.hear /^(asgard|a) (task|t) ([\d]+)$/, (msg) ->
     item = getAsgardName msg.match[2]
-    path = item + "show/#{msg.match[3]}.json"
+    path = item + "/show/#{msg.match[3]}.json"
     asgardGet msg, path, item
 
   robot.hear /^(asgard|a) url( (.*))?$/, (msg) ->

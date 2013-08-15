@@ -5,6 +5,15 @@
   PublicDns: <%= i.ec2Instance.publicDnsName %>
   Status: <%= i.ec2Instance.state.name %>
   <% end %>
+<% else if @data.instanceId: %>
+  Id: <%= @data.instance.instanceId %>
+  App: <%= @data.appName %>
+  PrivDns: <%= @data.instance.privateDnsName %>
+  PrivIp: <%= @data.instance.privateIpAddress %>
+  PubDns: <%= @data.instance.publicDnsName %>
+  PubIp: <%= @data.instance.publicIpAddress %>
+  SG: <% for sg in @data.instance.securityGroups: %> <%= sg.groupName %><% end %>
 <% else: %>
-  No instances
+  Error: <%= @data.error %>
 <% end %>
+

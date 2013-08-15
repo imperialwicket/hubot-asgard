@@ -44,6 +44,7 @@ getAsgardName = (name) ->
     when name == 'loadbalancer' || name == 'lb' then 'loadBalancer'
     when name == 'i' then 'instance'
     when name == 'c' then 'cluster'
+    when name == 't' then 'task'
     else name
 
   return asgardName

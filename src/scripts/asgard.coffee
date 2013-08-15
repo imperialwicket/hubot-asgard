@@ -21,6 +21,7 @@
 #   asgard loadbalancer - List loadbalancers per region
 #   asgard region <region> - Get/set the asgard region
 #   asgard rollingpush <asg> <ami> - Start a rolling push of <ami> into <asg>
+#   asgard task <id> - Show details for a given task
 #   asgard url <url> - Get/set the asgard base url
 #
 #
@@ -79,7 +80,7 @@ module.exports = (robot) ->
     item = getAsgardName msg.match[2]
     asgardGet msg, item + '/list.json', item
 
-  robot.hear /^(asgard|a) (autoscaling|as|cluster|c|loadbalancer|lb|task|t)( ([\w\d-]+))?$/, (msg) ->
+  robot.hear /^(asgard|a) (autoscaling|as|cluster|c|loadbalancer|lb)( ([\w\d-]+))?$/, (msg) ->
     path = tpl = getAsgardName msg.match[2]
     path += if msg.match[4] then "/show/#{msg.match[4]}.json" else '/list.json'
     asgardGet msg, path, tpl
@@ -99,14 +100,20 @@ module.exports = (robot) ->
 
   # Instace APP (Eureka dependent)
   robot.hear /^(asgard|a) (instance|i) ([a-zA-Z0-9]+)$/, (msg) ->
-    item = getAsgardName msg.match[3]
+    item = getAsgardName msg.match[2]
     path = item + "/list/#{msg.match[3]}.json"
     asgardGet msg, path, item
 
   # Instance ID
   robot.hear /^(asgard|a) (instance|i) (i-[a-f0-9]{8})$/, (msg) ->
-    item = getAsgardName msg.match[3]
+    item = getAsgardName msg.match[2]
     path = item + "/show/#{msg.match[3]}.json"
+    asgardGet msg, path, item
+
+  # Task ID
+  robot.hear /^(asgard|a) (task|t) ([\d]+)$/, (msg) ->
+    item = getAsgardName msg.match[2]
+    path = item + "show/#{msg.match[3]}.json"
     asgardGet msg, path, item
 
   robot.hear /^(asgard|a) url( (.*))?$/, (msg) ->

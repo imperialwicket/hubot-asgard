@@ -20,7 +20,7 @@ hubot-asgard
 
 Until hubot-asgard is more mature, it's not going to be available via npm or github/hubot-scripts. None of the github/hubot-scripts use templates and this seems a little problematic; once the directory structure and more of the core functionality is final, I will get things in npm.
 
-Hubot-asgard requires 'eco' (I'm using >= 1.1.0 and  have not tested anything else).
+Hubot-asgard requires 'eco' (>= 1.1.0) and 'async' (>= 0.2.9). I'm not doing anything cutting edge, and it will probably work with older versions, but I have not tested them.
 
 For now, you will need to add the src/scripts/asgard.coffee to your Hubot scripts and create the src/templates directory for Hubot. Depending on your configuration, something like this might work:
 
@@ -28,7 +28,7 @@ For now, you will need to add the src/scripts/asgard.coffee to your Hubot script
     cd ~
     git clone https://github.com/imperialwicket/hubot-asgard.git
     cd $HUBOT_DIR
-    npm install eco
+    npm install eco async
     ln -s ~/hubot-asgard/src/scripts/asgard.coffee $HUBOT_DIR/scripts/asgard.coffee
     ln -s ~/hubot-asgard/src/templates/ $HUBOT_DIR/templates
 
@@ -45,10 +45,35 @@ You can retrieve and update these values with Hubot via:
     asgard region
 
 
+## Practical Use
+
+Show autoscaling groups:
+
+    asgard autoscaling
+    OR
+    a as
+
+Show a single autoscaling group:
+
+    a as autoscaling-group-name
+
+Show amis:
+
+    asgard ami
+
+Start a rolling push:
+
+    asgard rollingpush autoscaling-group-name ami-1234abcd
+
+Check the rolling push task:
+
+    asgard task
+    asgard task 12
+
+
 ## Todo
 
-* Right now the API wrapping is highest priority. 
+* Right now the API wrapping is highest priority; mainly next asg creation and asg edits
 * Second is nomenclature and making sure that commands make sense and have consistency
 * List size checking, response batching. Need basic safety checks in case someone tries to get the list of all AMIs in us-east-1 (or has very large systems).
 * Implement roles - Use HUBOT admin, or entirely separate roles? Probably both.
-* Update regex to support shorter syntax, Can 'asgard instance APP' == '!ai APP' (Will this be a safe technique for shortening?)

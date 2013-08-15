@@ -71,6 +71,11 @@ Check the rolling push task:
     asgard task 12
 
 
+## Templates
+
+Hubot-asgard returns data via ([eco](https://github.com/sstephenson/eco)) templates. If you are missing data, or want to organize things differently, hit the Asgard web interface that corresponds to a request and append the url with '.json'. This should show you the data that's being passed to the template. Change the template in a fork and either rock your personal changes, or submit a pull request for everyone to enjoy.
+
+
 ## Todo
 
 * Right now the API wrapping is highest priority; mainly next asg creation and asg edits

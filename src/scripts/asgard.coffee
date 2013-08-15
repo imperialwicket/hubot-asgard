@@ -12,6 +12,7 @@
 # Commands:
 #   asgard ami - List AMIs per region (careful if public enabled)
 #   asgard ami <id> - Show details for ami ID (ami-[a-f0-9]{8})
+#   asgard application - List applications per region
 #   asgard autoscaling <name> - Show details for autoscaling group <name>
 #   asgard cluster <name> - Show details for cluster <name>
 #   asgard instance - List instances per region
@@ -35,6 +36,7 @@ getBaseUrl = ->
 getAsgardName = (name) ->
   asgardName = switch
     when name == 'ami' || name == 'a' then 'image'
+    wjem name == 'app' then 'application'
     when name == 'autoscaling' || name == 'as' then 'autoScaling'
     when name == 'loadbalancer' || name == 'lb' then 'loadBalancer'
     when name == 'i' then 'instance'
@@ -57,7 +59,7 @@ response = (dataIn, template) ->
   return eco.render template, data: dataIn
 
 module.exports = (robot) ->
-  robot.hear /^(asgard|a) (ami|a|instance|i)$/, (msg) ->
+  robot.hear /^(asgard|a) (ami|a|instance|i|application|app)$/, (msg) ->
     item = getAsgardName msg.match[2]
     asgardGet msg, item + '/list.json', item
 

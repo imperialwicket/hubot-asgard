@@ -1,0 +1,8 @@
+<% if @data.length: %><% for i in @data: %>
+  Name: <%= i.name %>
+  Description: <%= i.description %>
+  Owner: <%= i.owner %>
+  <% end %>
+<% else if @data.error: %>
+  Error: <%= @data.error %>
+<% end %>

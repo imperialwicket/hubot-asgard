@@ -47,6 +47,8 @@ You can retrieve and update these values with Hubot via:
 
 ## Practical Use
 
+Use `hubot help` or check the asgard.coffee file to get the full list of options with short descriptions. The steps below cover checking autoscaling groups and pushing a new ami to a particular autoscaling group. 
+
 Show autoscaling groups:
 
     asgard autoscaling

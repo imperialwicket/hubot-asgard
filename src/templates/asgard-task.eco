@@ -1,0 +1,15 @@
+<% if @data.runningTaskList %><% for i in @data.runningTaskList: %>
+  Name: <%= i.name %>
+  Logs: 
+    <% for t in i.log: %> <%= t %>
+    <% end %>
+  <% end %>
+<% else if @data.log: %>
+  operation: <%= @data.operation %>
+  durationString: <%= @data.duration %>
+  Logs:
+    <% for t in @data.log: %> <%= t %>
+    <% end %>
+<% else if @data.error: %>
+  Error: <%= @data.error %>
+<% end %>

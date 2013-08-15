@@ -132,10 +132,10 @@ module.exports = (robot) ->
           location = result.headers.location
           taskId = location.substr location.lastIndexOf "/"
 
-        return taskId
+        callback null, taskId
     ], (err, result) ->
       if err
         console.error err
       else
-        msg.send getBaseUrl()+"task/show/#{result} or 'asgard task 15'"
+        msg.send getBaseUrl()+"task/show/#{result} or 'asgard task #{result}'"
 

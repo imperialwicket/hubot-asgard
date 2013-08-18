@@ -49,51 +49,56 @@ ec2 = aws
   .setApiVersion('2013-06-15')
   .setRegion('us-east-1')
 
-asgardSg = robot.brain.get(sgBrain) * 1 or 0
-asgardAmi = robot.brain.get(amiBrain) or netflixossAmi
-
 createSg = (msg, callback) ->
-  if robot.brain.get 'asgardSg'
-    sg = {groupName: sgName, Description: sgName}
-    sgResponse = ''
-    ec2.request 'createSecurityGroup', sg, (error, data) ->
-      if error
-        console.log error
-        callback "Error: #{error}."
-      else
-        sgResponse = data.GroupId
-        robot.brain.set sgBrain, 1
-        msg.send "Created security group #{sgResponse}."
-        callback
-  else
-    msg.send "Security group #{sgName} exists."
-    callback
-
-runAsgard = (msg, callback) ->
-  instance = {ImageId: asgardAmi, MinCount: 1, MaxCount: 1, SecurityGroups: [asgardSg], InstanceType: 'm1.small'}
-  ec2.request 'runInstances', instance, (error, data) ->
+  sg = {GroupName: sgName, GroupDescription: sgName}
+  ec2.request 'CreateSecurityGroup', sg, (error, data) ->
     if error
-      console.log error
-      callback "Error: #{error}."
+      callback "Error: #{error.document.Errors.Error}.", null
     else
-      msg.send "Instance pending: #{data.Instances[0].PublicDnsName}"
-      callback
+      console.log data
+      msg.send "Created security group #{sgName}(#{data.groupId})."
+      callback null, null
 
-clearBrain = (msg) ->
-  robot.brain.remove sgBrain
-  robot.brain.remove amiBrain
-  msg.send "Cleared saved values for Asgard AMI and Asgard Security Group."
+runAsgard = (msg, asgardAmi, callback) ->
+  instance = {ImageId: asgardAmi, MinCount: 1, MaxCount: 1, SecurityGroup: [sgName], InstanceType: 'm1.small'}
+  ec2.request 'RunInstances', instance, (error, data) ->
+    if error
+      console.log error.document.Errors.Error
+      callback "Error: #{error}.", null
+    else
+      console.log data
+      msg.send "Instance pending: #{data}"
+      callback null, null
 
 module.exports = (robot) ->
-  robot.hear /^asgard run$/, (msg) ->
+  robot.hear /^asgard-launcher run$/, (msg) ->
     async.series [
       (callback) ->
-        createSg msg, (err, data) ->
-          callback err
+        sg = robot.brain.get(sgBrain) or 0
+        if sg == 0
+          console.log("YEP")
+          createSg msg, (err, data) ->
+            console.log("ERR" + err)
+            if err == null
+              console.log("NOPE")
+              robot.brain.set sgBrain, '1'
+
+            callback err, null
+        else
+          msg.send "Security group #{sgName} exists."
+          callback null
       (callback) ->
-        runAsgard msg, (err, data) ->
+        console.log "RUN"
+        asgardAmi = robot.brain.get(amiBrain) or netflixossAmi
+        runAsgard msg, asgardAmi, (err, data) ->
           callback err
     ], (err, result) ->
       if err
         msg.send "Oops: #{err}"
 
+  robot.hear /^asgard-launcher clear$/, (msg) ->
+    robot.brain.remove sgBrain
+    robot.brain.remove amiBrain
+    msg.send "Cleared saved values for Asgard AMI and Asgard Security Group."
+
+    

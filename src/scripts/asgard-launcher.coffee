@@ -67,8 +67,16 @@ runAsgard = (msg, asgardAmi, callback) ->
       callback "Error: #{error}.", null
     else
       console.log data
-      msg.send "Instance pending: #{data}"
+      msg.send "Instance pending: #{data.instanceSet.instanceId}"
       callback null, null
+
+authorizeIp = (msg, ip) ->
+  ingress = {GroupName: sgName, IpProtocol: 'tcp', FromPort: '8080', ToPort: '8080', CidrIp: ip }
+  ec2.request 'AuthorizeSecurityGroupIngress', ingress, (error, data) ->
+    if error
+      console.log error.document.Errors.Error
+    else
+      msg.send "Authorized access to #{sgName} over port 8080 to #{ip}."
 
 module.exports = (robot) ->
   robot.hear /^asgard-launcher run$/, (msg) ->
@@ -76,11 +84,8 @@ module.exports = (robot) ->
       (callback) ->
         sg = robot.brain.get(sgBrain) or 0
         if sg == 0
-          console.log("YEP")
           createSg msg, (err, data) ->
-            console.log("ERR" + err)
             if err == null
-              console.log("NOPE")
               robot.brain.set sgBrain, '1'
 
             callback err, null
@@ -88,7 +93,6 @@ module.exports = (robot) ->
           msg.send "Security group #{sgName} exists."
           callback null
       (callback) ->
-        console.log "RUN"
         asgardAmi = robot.brain.get(amiBrain) or netflixossAmi
         runAsgard msg, asgardAmi, (err, data) ->
           callback err
@@ -101,4 +105,6 @@ module.exports = (robot) ->
     robot.brain.remove amiBrain
     msg.send "Cleared saved values for Asgard AMI and Asgard Security Group."
 
-    
+  robot.hear /^asgard-launcher authorize ([\d/\.+]{7,18})$/, (msg) ->
+    ip = if (msg.match[1].indexOf('/') == -1) then "#{msg.match[1]}/32" else msg.match[1]
+    authorizeIp(msg, ip)

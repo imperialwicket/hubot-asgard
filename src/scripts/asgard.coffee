@@ -98,7 +98,7 @@ module.exports = (robot) ->
     path = item + "/show/#msg.match[3]}.json"
     asgardGet msg, path, item
 
-  # Instace APP (Eureka dependent)
+  # Instance APP (Eureka dependent)
   robot.hear /^(asgard|a) (instance|i) ([a-zA-Z0-9]+)$/, (msg) ->
     item = getAsgardName msg.match[2]
     path = item + "/list/#{msg.match[3]}.json"

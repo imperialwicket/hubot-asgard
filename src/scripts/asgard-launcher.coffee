@@ -19,12 +19,12 @@
 #   necessary Security Group and launch from the NetflixOSS AMI again.
 #
 # Dependencies:
-#   aws2js
+#   aws-sdk
 #   async
 #
 # Configuration:
-#   process.env.HUBOT_AWS_ACCESS_KEY
-#   process.env.HUBOT_AWS_SECRET_KEY
+#   process.env.AWS_ACCESS_KEY_ID
+#   process.env.AWS_SECRET_ACCESS_KEY
 #
 # Commands:
 #   asgard-launcher run - Launches an m1.small Asgard instance
@@ -38,101 +38,98 @@
 
 netflixossAmi = 'ami-1889f771'
 sgName = amiName = instanceName = 'asgard-hubot'
-sgBrain = 'asgardSg'
 amiBrain = 'asgardAmi'
 
 async = require 'async'
-aws = require 'aws2js'
+aws = require 'aws-sdk'
 
-ec2 = aws
-  .load('ec2', process.env.HUBOT_AWS_ACCESS_KEY, process.env.HUBOT_AWS_SECRET_KEY)
-  .setApiVersion('2013-06-15')
-  .setRegion('us-east-1')
+aws.config.update {region: 'us-east-1'}
+ec2 = new aws.EC2
 
 createSg = (msg, callback) ->
-  sg = {GroupName: sgName, GroupDescription: sgName}
-  ec2.request 'CreateSecurityGroup', sg, (error, data) ->
-    if error
-      callback "Error: #{error.document.Errors.Error}.", null
-    else
-      console.log data
-      msg.send "Created security group #{sgName}(#{data.groupId})."
-      callback null, null
+  sg = {GroupName: sgName, Description: sgName}
+  req = ec2.createSecurityGroup(sg)
+    .on('error', (response) ->
+      console.log "ERROR: #{response}"
+      cbResponse = if (response.toString().indexOf("Duplicate") != -1) then null else response
+      callback(cbResponse, null))
+    .on('success', (response) ->
+      console.log response.data
+      msg.send "Created security group #{sgName} (#{response.data.GroupId})."
+      callback(null, null))
+    .send()
 
 runAsgard = (msg, asgardAmi, callback) ->
-  #TODO Use the IpPermissions object to configure security group and not this
-  # deprecated input object
-  instance = {ImageId: asgardAmi, MinCount: 1, MaxCount: 1, SecurityGroup: [sgName], InstanceType: 'm1.small'}
-  ec2.request 'RunInstances', instance, (error, data) ->
-    if error
-      console.log error.document.Errors.Error
-      callback "Error: #{error}.", null
-    else
-      console.log data
-      msg.send "Instance pending: #{data.instanceSet.instanceId}"
-      callback null, data.instanceSet.instanceId
+  instance = {ImageId: asgardAmi, MinCount: 1, MaxCount: 1, SecurityGroups: [sgName], InstanceType: 'm1.small'}
+  req = ec2.runInstances(instance)
+    .on('error', (response) ->
+      console.log "ERROR: #{response}"
+      callback(response, null))
+    .on('success', (response) ->
+      console.log response.data
+      # Assuming one instance returned in instanceSet...
+      instanceId = response.data.Instances[0].InstanceId
+      msg.send "Pending instance: #{instanceId}"
+      callback(null, {InstanceId: instanceId}))
+    .send()
 
 authorizeIp = (msg, ip) ->
-  ingress = {GroupName: sgName, IpProtocol: 'tcp', FromPort: '8080', ToPort: '8080', CidrIp: ip }
-  ec2.request 'AuthorizeSecurityGroupIngress', ingress, (error, data) ->
-    if error
-      console.log error.document.Errors.Error
-    else
-      msg.send "Authorized access to #{sgName} over port 8080 to #{ip}."
+  ingress = {GroupName: sgName, IpPermissions: [{IpProtocol: 'tcp', FromPort: 8080, ToPort: 8080, IpRanges: [{CidrIp: ip}]}]}
+  req = ec2.authorizeSecurityGroupIngress(ingress)
+    .on('error', (response) ->
+      console.log("ERROR: #{response}"))
+    .on('success', (response) ->
+      msg.send("Authorized access to #{sgName} over port 8080 to #{ip}."))
+    .send()
 
 addInstanceNameTag = (msg, instanceId, callback) ->
-  tag = {Resources: [instanceId], Tags:[{Key: 'Name', Value: instanceName}]}
-  ec2.request 'CreateTags', tag, (error, data) ->
-    if error
-      console.log error.document.Errors
-    else
+  tag = {Resources: [instanceId], Tags: [{Key: 'Name', Value: instanceName}]}
+  req = ec2.createTags(tag)
+    .on('error', (response) ->
+      console.log "ERROR: #{response}"
+      callback(response, null))
+    .on('success', (response) ->
       msg.send "Added tag Name=#{instanceName} to instance #{instanceId}"
-
-    callback
+      callback(null, {InstanceId: instanceId}))
+    .send()
 
 getInstancePublicDnsName = (msg, instanceId, callback) ->
-  params = { Filters : [ { Name : 'InstanceId', Values : [instanceId] } ] }
-  ec2.request 'DescribeInstances', params, (error, data) ->
-    if error
-      console.log error.document.Errors
-    else
+  params = { Filters : [ { Name : 'instance-id', Values : [instanceId] } ] }
+  req = ec2.describeInstances(params)
+    .on('error', (response) ->
+      console.log "ERROR: #{response}"
+      callback(response, null))
+    .on('success', (response) ->
       # Assuming one reservation and one instance returned; shouldn't do this...
-      url = data.Reservations[0].Instances[0].PublicDnsName
+      url = response.data.Reservations[0].Instances[0].PublicDnsName
       msg.send "Asgard is loading at #{url}"
       msg.send "You can use 'asgard url #{url}:8080', if you want to save this dns value."
+      callback(null, url))
+    .send()
 
 module.exports = (robot) ->
+  robot.hear /^api-test$/, (msg) ->
+    createSg msg, (error, data) ->
+      return
+
   # Create a security group and launch an Asgard ami with the new security group
   robot.hear /^asgard-launcher run$/, (msg) ->
     async.waterfall [
       (callback) ->
-        sg = robot.brain.get(sgBrain) or 0
-        if sg == 0
-          createSg msg, (err, data) ->
-            if err == null
-              robot.brain.set sgBrain, '1'
-
-            callback err, null
-        else
-          msg.send "Security group #{sgName} exists."
-          callback null
-      (callback) ->
+        createSg msg, callback
+      (_, callback) ->
         asgardAmi = robot.brain.get(amiBrain) or netflixossAmi
-        runAsgard msg, asgardAmi, (err, data) ->
-          callback err, data
-      (callback, instanceId) ->
-        addInstanceNameTag msg, instanceId, (err, data) ->
-          callback err, instanceId
-      (callback, instanceId) ->
-        getInstancePublicDnsName msg, instanceId, (err, data) ->
-          callback err, null
+        runAsgard msg, asgardAmi, callback
+      (data, callback) ->
+        addInstanceNameTag msg, data.InstanceId, callback
+      (data, callback) ->
+        getInstancePublicDnsName msg, data.InstanceId, callback
     ], (err, result) ->
       if err
         msg.send "Oops: #{err}"
 
   # Clear the brain entries for asgard-launcher
   robot.hear /^asgard-launcher clear$/, (msg) ->
-    robot.brain.remove sgBrain
     robot.brain.remove amiBrain
     msg.send "Cleared saved values for Asgard AMI and Asgard Security Group."
 

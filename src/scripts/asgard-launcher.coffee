@@ -40,6 +40,7 @@
 netflixossAmi = 'ami-1889f771'
 sgName = imageName = instanceName = 'asgard-hubot'
 amiBrain = 'asgardAmi'
+debug = true
 
 async = require 'async'
 aws = require 'aws-sdk'
@@ -47,15 +48,19 @@ aws = require 'aws-sdk'
 aws.config.update {region: 'us-east-1'}
 ec2 = new aws.EC2
 
+log = (event) ->
+  if debug
+    console.log event
+
 createSg = (msg, callback) ->
   sg = {GroupName: sgName, Description: sgName}
   req = ec2.createSecurityGroup(sg)
     .on('error', (response) ->
-      console.log "ERROR: #{response}"
+      log "ERROR: #{response}"
       cbResponse = if (response.toString().indexOf("Duplicate") != -1) then null else response
       callback(cbResponse, null))
     .on('success', (response) ->
-      console.log response.data
+      log response.data
       msg.send "Created security group #{sgName} (#{response.data.GroupId})."
       callback(null, null))
     .send()
@@ -64,10 +69,10 @@ runAsgard = (msg, asgardAmi, callback) ->
   instance = {ImageId: asgardAmi, MinCount: 1, MaxCount: 1, SecurityGroups: [sgName], InstanceType: 'm1.small'}
   req = ec2.runInstances(instance)
     .on('error', (response) ->
-      console.log "ERROR: #{response}"
+      log "ERROR: #{response}"
       callback(response, null))
     .on('success', (response) ->
-      console.log response.data
+      log response.data
       # Assuming one instance returned in instanceSet...
       instanceId = response.data.Instances[0].InstanceId
       msg.send "Pending instance: #{instanceId}"
@@ -79,8 +84,9 @@ authorizeIp = (msg, ip) ->
   ingress = {GroupName: sgName, IpPermissions: [{IpProtocol: 'tcp', FromPort: 8080, ToPort: 8080, IpRanges: [{CidrIp: ip}]}]}
   req = ec2.authorizeSecurityGroupIngress(ingress)
     .on('error', (response) ->
-      console.log("ERROR: #{response}"))
+      log("ERROR: #{response}"))
     .on('success', (response) ->
+      log response.data
       msg.send("Authorized access to #{sgName} over port 8080 to #{ip}."))
     .send()
 
@@ -88,9 +94,10 @@ addInstanceNameTag = (msg, instanceId, callback) ->
   tag = {Resources: [instanceId], Tags: [{Key: 'Name', Value: instanceName}]}
   req = ec2.createTags(tag)
     .on('error', (response) ->
-      console.log "ERROR: #{response}"
+      log "ERROR: #{response}"
       callback(response, null))
     .on('success', (response) ->
+      log response.data
       msg.send "Added tag Name=#{instanceName} to instance #{instanceId}"
       callback(null, {InstanceId: instanceId}))
     .send()
@@ -99,9 +106,10 @@ getInstanceIds = (msg, callback) ->
   params = { Filters : [ { Name: 'tag:Name', Values: [instanceName] } ] }
   req = ec2.describeInstances(params)
     .on('error', (response) ->
-      console.log "ERROR: #{response}"
+      log "ERROR: #{response}"
       callback(response, null))
     .on('success', (response) ->
+      log response.data
       instanceId = response.data.Reservations[0].Instances[0].InstanceId
       msg.send "Found instance: #{instanceId}"
       callback(null, {InstanceId: instanceId}))
@@ -111,11 +119,11 @@ getInstancePublicDnsName = (msg, instanceId, callback) ->
   params = { Filters : [ { Name: 'instance-id', Values: [instanceId] } ] }
   req = ec2.describeInstances(params)
     .on('error', (response) ->
-      console.log "ERROR: #{response}"
+      log "ERROR: #{response}"
       callback(response, null))
     .on('success', (response) ->
       # Assume one reservation and one instance returned; shouldn't do this...
-      console.log response.data.Reservations[0].Instances[0]
+      log response.data
       if response.data.Reservations[0].Instances[0].PublicDnsName?
         url = response.data.Reservations[0].Instances[0].PublicDnsName
         msg.send "Asgard is loading at #{url}"
@@ -133,9 +141,10 @@ createImage = (msg, instanceId, callback) ->
   params = {InstanceId: instanceId, Name: name}
   req = ec2.createImage(params)
     .on('error', (response) ->
-      console.log "ERROR: #{reponse}"
+      log "ERROR: #{reponse}"
       callback(response, null))
     .on('success', (response) ->
+      log response.data
       msg.send "Created AMI #{response.data.ImageId}."
       callback(null, {ImageId: response.data.ImageId}))
     .send()
@@ -143,9 +152,10 @@ createImage = (msg, instanceId, callback) ->
 terminateInstances = (msg, instanceId, callback) ->
   req = ec2.terminateInstances({InstanceIds: [instanceId]})
     .on('error', (response) ->
-      console.log "ERROR: #{response}"
+      log "ERROR: #{response}"
       callback(response, null))
     .on('success', (response) ->
+      log response.data
       msg.send "Terminated instance: #{instanceId}"
       callback(null, null))
     .send()
@@ -153,10 +163,10 @@ terminateInstances = (msg, instanceId, callback) ->
 module.exports = (robot) ->
   # Create a security group and launch an Asgard ami with the new security group
   robot.hear /^asgard-launcher run$/, (msg) ->
-    async.series [
+    async.waterfall [
       (callback) ->
         createSg msg, callback
-      (callback) ->
+      (_, callback) ->
         asgardAmi = robot.brain.get(amiBrain) or netflixossAmi
         runAsgard msg, asgardAmi, callback
       (data, callback) ->

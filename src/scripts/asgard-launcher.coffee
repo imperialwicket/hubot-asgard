@@ -93,8 +93,20 @@ addInstanceNameTag = (msg, instanceId, callback) ->
       callback(null, {InstanceId: instanceId}))
     .send()
 
+getInstanceIds = (msg, callback) ->
+  params = { Filters : [ { Name: 'tag:Name', Values: [instanceName] } ] }
+  req = ec2.describeInstances(params)
+    .on('error', (response) ->
+      console.log "ERROR: #{response}"
+      callback(response, null))
+    .on('success', (response) ->
+      instanceId = response.data.Reservations[0].Instances[0].InstanceId
+      msg.send "Found instance: #{instanceId}"
+      callback(null, {InstanceId: instanceId}))
+    .send()
+
 getInstancePublicDnsName = (msg, instanceId, callback) ->
-  params = { Filters : [ { Name : 'instance-id', Values : [instanceId] } ] }
+  params = { Filters : [ { Name: 'instance-id', Values: [instanceId] } ] }
   req = ec2.describeInstances(params)
     .on('error', (response) ->
       console.log "ERROR: #{response}"
@@ -107,11 +119,17 @@ getInstancePublicDnsName = (msg, instanceId, callback) ->
       callback(null, url))
     .send()
 
-module.exports = (robot) ->
-  robot.hear /^api-test$/, (msg) ->
-    createSg msg, (error, data) ->
-      return
+terminateInstances = (msg, instanceId, callback) ->
+  req = ec2.terminateInstances({InstanceIds: [instanceId]})
+    .on('error', (response) ->
+      console.log "ERROR: #{response}"
+      callback(response, null))
+    .on('success', (response) ->
+      msg.send "Terminated instance: #{instanceId}"
+      callback(null, null))
+    .send()
 
+module.exports = (robot) ->
   # Create a security group and launch an Asgard ami with the new security group
   robot.hear /^asgard-launcher run$/, (msg) ->
     async.waterfall [
@@ -137,3 +155,14 @@ module.exports = (robot) ->
   robot.hear /^asgard-launcher authorize ([\d/\.+]{7,18})$/, (msg) ->
     ip = if (msg.match[1].indexOf('/') == -1) then "#{msg.match[1]}/32" else msg.match[1]
     authorizeIp(msg, ip)
+
+  robot.hear /^asgard-launcher terminate$/, (msg) ->
+    async.waterfall [
+      (callback) ->
+        getInstanceIds msg, callback
+      (data, callback) ->
+        terminateInstances msg, data.InstanceId, callback
+    ], (err, result) ->
+      if err
+        msg.send "Oops: #{err}"
+

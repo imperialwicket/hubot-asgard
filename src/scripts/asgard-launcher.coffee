@@ -75,7 +75,7 @@ runAsgard = (msg, asgardAmi, callback) ->
       log response.data
       # Assuming one instance returned in instanceSet...
       instanceId = response.data.Instances[0].InstanceId
-      msg.send "Pending instance: #{instanceId}"
+      msg.send "Pending instance #{instanceId} is launching based on #{asgardAmi}."
       msg.send "Use 'asgard-launcher url' to retrieve the PublicDnsName."
       callback(null, {InstanceId: instanceId}))
     .send()
@@ -126,7 +126,7 @@ getInstancePublicDnsName = (msg, instanceId, callback) ->
       log response.data
       if response.data.Reservations[0].Instances[0].PublicDnsName?
         url = response.data.Reservations[0].Instances[0].PublicDnsName
-        msg.send "Asgard is loading at #{url}"
+        msg.send "Asgard is loading at #{url}:8080"
         msg.send "Use 'asgard url #{url}:8080' to save this dns value for hubot-asgard."
         msg.send "Use 'asgard-launcher authorize <YOUR_IP>' to update the asgard-hubot security group and allow access over 8080 to your ip."
         msg.send "After entering your AWS config data, use 'asgard-launcher create ami' to generate a private and configured AMI (it is recommended to DISABLE the public Amazon images options for hubot-asgard)."

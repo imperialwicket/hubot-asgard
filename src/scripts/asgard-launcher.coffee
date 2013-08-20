@@ -31,6 +31,7 @@
 #   asgard-launcher authorize <IP> - Authorize an IP address to access instance
 #   asgard-launcher create ami - Creates an AMI from a running Asgard instance
 #   asgard-launcher terminate - Terminate the Asgard instance (based on Tag:Name)
+#   asgard-launcher url - Get the PublicDnsName for instance with Tag:Name=asgard-hubot
 #   asgard-launcher clear - Use clear to wipe saved data.
 #
 # Author:
@@ -125,6 +126,18 @@ getInstancePublicDnsName = (msg, instanceId, callback) ->
       callback(null, url))
     .send()
 
+createImage = (msg, instanceId, callback) ->
+  name = imageName + '-' + + new Date().getTime()
+  params = {InstanceId: instanceId, Name: name}
+  req = ec2.createImage(params)
+    .on('error', (response) ->
+      console.log "ERROR: #{reponse}"
+      callback(response, null))
+    .on('success', (response) ->
+      msg.send 'Created AMI #{response.data.ImageId}.'
+      callback(null, {ImageId: response.data.ImageId}))
+    .send()
+
 terminateInstances = (msg, instanceId, callback) ->
   req = ec2.terminateInstances({InstanceIds: [instanceId]})
     .on('error', (response) ->
@@ -164,7 +177,6 @@ module.exports = (robot) ->
       if err
         msg.send "Oops: #{err}"
 
-
   # Update the security group 'asgard-hubot' to allow access to 8080 for <ip>
   robot.hear /^asgard-launcher authorize ([\d/\.+]{7,18})$/, (msg) ->
     ip = if (msg.match[1].indexOf('/') == -1) then "#{msg.match[1]}/32" else msg.match[1]
@@ -180,3 +192,16 @@ module.exports = (robot) ->
       if err
         msg.send "Oops: #{err}"
 
+  # Create an AMI based on the current asgard-hubot instance
+  robot.hear /^asgard-launcher create ami$/, (msg) ->
+    async.waterfall [
+      (callback) ->
+        getInstanceIds msg, callback
+      (data, callback) ->
+        createImage msg, data.InstanceId, callback
+      (data, callback) ->
+        robot.brain.set amiBrain, data.ImageId
+        callback
+    ], (err, result) ->
+      if err
+        msg.send "Oops: #{err}"

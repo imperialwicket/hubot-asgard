@@ -37,9 +37,9 @@ If you created an ami, asgard-launcher will use that ami for future `asgard-laun
 
 Until hubot-asgard is more mature, it's not going to be available via npm or github/hubot-scripts. None of the github/hubot-scripts use templates and this seems a little problematic; once the directory structure and more of the core functionality is final, I will get things in npm.
 
-Hubot-asgard requires 'eco' (>= 1.1.0) and 'async' (>= 0.2.9). I'm not doing anything cutting edge, and it will probably work with older versions, but I have not tested them.
+Hubot-asgard requires 'eco' (>= 1.1.0) and 'async' (>= 0.2.9). I'm not doing anything cutting edge, and it will probably work with older versions, but I have not tested them. Asgard-launcher is bundled here, and it requires 'aws-sdk' (>=1.5.0) to help with launching and managing the Asgard instance and supporting AWS objects. 
 
-For now, you will need to add the src/scripts/asgard.coffee to your Hubot scripts and create the src/templates directory for Hubot. Depending on your configuration, something like this might work:
+For now, you will need to add the src/scripts/asgard.coffee to your Hubot scripts (and optionally src/scripts/asgard-launcher.coffee) and create the src/templates directory for Hubot. Depending on your configuration, something like this might work:
 
     HUBOT_DIR=/path/to/hubot/
     cd ~
@@ -60,6 +60,8 @@ You can retrieve and update these values with Hubot via:
     asgard url
     asgard region us-west-2
     asgard region
+
+If you are using asgard-launcher.coffee, you must set AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY environment variables for successful aws-sdk configuration.
 
 
 ## Practical Use

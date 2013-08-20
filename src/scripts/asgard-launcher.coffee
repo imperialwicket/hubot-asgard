@@ -38,7 +38,7 @@
 #   imperialwicket
 
 netflixossAmi = 'ami-1889f771'
-sgName = amiName = instanceName = 'asgard-hubot'
+sgName = imageName = instanceName = 'asgard-hubot'
 amiBrain = 'asgardAmi'
 
 async = require 'async'
@@ -71,6 +71,7 @@ runAsgard = (msg, asgardAmi, callback) ->
       # Assuming one instance returned in instanceSet...
       instanceId = response.data.Instances[0].InstanceId
       msg.send "Pending instance: #{instanceId}"
+      msg.send "Use 'asgard-launcher url' to retrieve the PublicDnsName."
       callback(null, null))
     .send()
 
@@ -114,14 +115,15 @@ getInstancePublicDnsName = (msg, instanceId, callback) ->
       callback(response, null))
     .on('success', (response) ->
       # Assume one reservation and one instance returned; shouldn't do this...
-      console.log response.data
+      console.log response.data.Reservations[0].Instances[0]
       if response.data.Reservations[0].Instances[0].PublicDnsName?
-        msg.send '[PublicDnsName is not yet available]'
-      else
         url = response.data.Reservations[0].Instances[0].PublicDnsName
         msg.send "Asgard is loading at #{url}"
         msg.send "Use 'asgard url #{url}:8080' to save this dns value for hubot-asgard."
         msg.send "Use 'asgard-launcher authorize <YOUR_IP>' to update the asgard-hubot security group and allow access over 8080 to your ip."
+        msg.send "After entering your AWS config data, use 'asgard-launcher create ami' to generate a private and configured AMI (it is recommended to DISABLE the public Amazon images options for hubot-asgard)."
+      else
+        msg.send '[PublicDnsName is not yet available]'
 
       callback(null, url))
     .send()
@@ -134,7 +136,7 @@ createImage = (msg, instanceId, callback) ->
       console.log "ERROR: #{reponse}"
       callback(response, null))
     .on('success', (response) ->
-      msg.send 'Created AMI #{response.data.ImageId}.'
+      msg.send "Created AMI #{response.data.ImageId}."
       callback(null, {ImageId: response.data.ImageId}))
     .send()
 

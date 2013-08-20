@@ -119,8 +119,8 @@ getInstanceIds = (msg, callback) ->
       callback(null, {InstanceId: instanceId}))
     .send()
 
-getInstancePublicDnsName = (msg, instanceId, callback) ->
-  params = { Filters : [ { Name: 'instance-id', Values: [instanceId] } ] }
+getInstancePublicDnsName = (msg, callback) ->
+  params = { Filters : [ { Name: 'tag:Name', Values: [instanceName] } ] }
   req = ec2.describeInstances(params)
     .on('error', (response) ->
       log "ERROR: #{response}"
@@ -201,13 +201,11 @@ module.exports = (robot) ->
     robot.brain.remove brain.image
     msg.send "Cleared saved values for Asgard AMI and Asgard Security Group."
 
-  # Get the URL
+  # Get the PublicDnsName based on tag:Name=<instanceName>
   robot.hear /^asgard-launcher url$/, (msg) ->
     async.waterfall [
       (callback) ->
-        getInstanceIds msg, callback
-      (data, callback) ->
-        getInstancePublicDnsName msg, data.InstanceId, callback
+        getInstancePublicDnsName msg, callback
     ], (err, result) ->
       if err
         msg.send "Oops: #{err}"

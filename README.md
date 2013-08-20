@@ -15,6 +15,23 @@ hubot-asgard
 
 [Asgard](https://github.com/Netflix/asgard) needs to be running somewhere, and Hubot needs to be able to access it. Hubot-asgard does not allow self-signed SSL certs, so if you are using an un-altered instance based on [these](http://imperialwicket.com/netflix-asgard-12-ami-updates), make sure to hit port 8080 directly, instead of using the SSL proxy. Also note that Hubot-asgard does not currently support basic authentication, another reason to hit 8080 directly.
 
+If you do not have an Asgard instance, you should install both of the asgard.coffee and asgard-launcher.coffee scripts. Asgard-launcher is an AWS-centric launch utility for Asgard. After configuration in Hubot, you can launch a new Asgard instance as follows:
+
+    asgard-launcher run
+    asgard-launcher url
+    asgard-launcher authorize <HUBOT_IP>
+    asgard-launcher authorize <YOUR_IP>
+
+After configuring your Asgard instance (via web browser), you can elect to save a private AMI that includes your configured AWS credentials with:
+
+    asgard-launcher create ami
+
+If you want to shutdown the instance, use:
+
+    asgard-launcher terminate
+
+If you created an ami, asgard-launcher will use that ami for future `asgard-launcher run` requests. If not, it will launch the default ami (requiring configuration) each time.
+
 
 ## Installation
 

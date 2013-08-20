@@ -6,7 +6,7 @@
   "dependencies": {
     "eco": ">=1.1.0-rc-3",
     "async": ">=0.2.9",
-    "aws2js": ">=0.8.3"
+    "aws-sdk": "=1.5.0"
   },
   "engines": {
     "node": ">=0.10.15",

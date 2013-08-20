@@ -28,18 +28,22 @@
 #
 # Commands:
 #   asgard-launcher run - Launches an m1.small Asgard instance
-#   asgard-launcher authorize <IP> - Authorize an IP address to access instance
+#   asgard-launcher authorize <ip> - Authorize an IP address to access instance
 #   asgard-launcher create ami - Creates an AMI from a running Asgard instance
 #   asgard-launcher terminate - Terminate the Asgard instance (based on Tag:Name)
 #   asgard-launcher url - Get the PublicDnsName for instance with Tag:Name=asgard-hubot
 #   asgard-launcher clear - Use clear to wipe saved data.
+#   asgard-launcher instance type <instanceType> - Override default m1.small instance type
+#   asgard-launcher ami <ami-id> - Override default ami (NetflixOSS release or hubot-asgard generated ami)
 #
 # Author:
 #   imperialwicket
 
 netflixossAmi = 'ami-1889f771'
+asgardAmi = netflixossAmi
+instanceType = 'm1.small'
 sgName = imageName = instanceName = 'asgard-hubot'
-amiBrain = 'asgardAmi'
+brain = { image: 'asgardAmi', instanceType: 'asgardInstanceType' }
 debug = true
 
 async = require 'async'
@@ -65,8 +69,8 @@ createSg = (msg, callback) ->
       callback(null, null))
     .send()
 
-runAsgard = (msg, asgardAmi, callback) ->
-  instance = {ImageId: asgardAmi, MinCount: 1, MaxCount: 1, SecurityGroups: [sgName], InstanceType: 'm1.small'}
+runAsgard = (msg, asgardAmi, instanceType, callback) ->
+  instance = {ImageId: asgardAmi, MinCount: 1, MaxCount: 1, SecurityGroups: [sgName], InstanceType: instanceType}
   req = ec2.runInstances(instance)
     .on('error', (response) ->
       log "ERROR: #{response}"
@@ -161,13 +165,30 @@ terminateInstances = (msg, instanceId, callback) ->
     .send()
 
 module.exports = (robot) ->
+  # Set an instance type for launching
+  robot.hear /^asgard-launcher instance type ([\w\d\.]+)$/, (msg) ->
+    if msg.match[1]
+      instanceType = msg.match[1]
+      robot.brain.set brain.instanceType, instanceType
+
+    msg.send "Instance type is #{instanceType}."
+
+  # Set a custom AMI for launching
+  robot.hear /^asgard-launcher ami (ami-[a-f0-9]{8})$/, (msg) ->
+    if msg.match[1]
+      asgardAmi = msg.match[1]
+      robot.brain.set brain.image, asgardAmi
+
+    msg.send "Image (AMI) is #{asgardAmi}."
+
   # Create a security group and launch an Asgard ami with the new security group
   robot.hear /^asgard-launcher run$/, (msg) ->
     async.waterfall [
       (callback) ->
         createSg msg, callback
       (_, callback) ->
-        asgardAmi = robot.brain.get(amiBrain) or netflixossAmi
+        asgardAmi = robot.brain.get(brain.image) or asgardAmi
+        asgardInstanceType = robot.brain.get(brain.instanceType) or instanceType
         runAsgard msg, asgardAmi, callback
       (data, callback) ->
         addInstanceNameTag msg, data.InstanceId, callback
@@ -177,7 +198,7 @@ module.exports = (robot) ->
 
   # Clear the brain entries for asgard-launcher
   robot.hear /^asgard-launcher clear$/, (msg) ->
-    robot.brain.remove amiBrain
+    robot.brain.remove brain.image
     msg.send "Cleared saved values for Asgard AMI and Asgard Security Group."
 
   # Get the URL
@@ -214,7 +235,7 @@ module.exports = (robot) ->
       (data, callback) ->
         createImage msg, data.InstanceId, callback
       (data, callback) ->
-        robot.brain.set amiBrain, data.ImageId
+        robot.brain.set brain.image, data.ImageId
         callback
     ], (err, result) ->
       if err

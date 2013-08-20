@@ -70,7 +70,7 @@ runAsgard = (msg, asgardAmi, callback) ->
       # Assuming one instance returned in instanceSet...
       instanceId = response.data.Instances[0].InstanceId
       msg.send "Pending instance: #{instanceId}"
-      callback(null, {InstanceId: instanceId}))
+      callback(null, null))
     .send()
 
 authorizeIp = (msg, ip) ->
@@ -112,10 +112,16 @@ getInstancePublicDnsName = (msg, instanceId, callback) ->
       console.log "ERROR: #{response}"
       callback(response, null))
     .on('success', (response) ->
-      # Assuming one reservation and one instance returned; shouldn't do this...
-      url = response.data.Reservations[0].Instances[0].PublicDnsName
-      msg.send "Asgard is loading at #{url}"
-      msg.send "You can use 'asgard url #{url}:8080', if you want to save this dns value."
+      # Assume one reservation and one instance returned; shouldn't do this...
+      console.log response.data
+      if response.data.Reservations[0].Instances[0].PublicDnsName?
+        msg.send '[PublicDnsName is not yet available]'
+      else
+        url = response.data.Reservations[0].Instances[0].PublicDnsName
+        msg.send "Asgard is loading at #{url}"
+        msg.send "Use 'asgard url #{url}:8080' to save this dns value for hubot-asgard."
+        msg.send "Use 'asgard-launcher authorize <YOUR_IP>' to update the asgard-hubot security group and allow access over 8080 to your ip."
+
       callback(null, url))
     .send()
 
@@ -132,16 +138,12 @@ terminateInstances = (msg, instanceId, callback) ->
 module.exports = (robot) ->
   # Create a security group and launch an Asgard ami with the new security group
   robot.hear /^asgard-launcher run$/, (msg) ->
-    async.waterfall [
+    async.series [
       (callback) ->
         createSg msg, callback
-      (_, callback) ->
+      (callback) ->
         asgardAmi = robot.brain.get(amiBrain) or netflixossAmi
         runAsgard msg, asgardAmi, callback
-      (data, callback) ->
-        addInstanceNameTag msg, data.InstanceId, callback
-      (data, callback) ->
-        getInstancePublicDnsName msg, data.InstanceId, callback
     ], (err, result) ->
       if err
         msg.send "Oops: #{err}"
@@ -150,6 +152,18 @@ module.exports = (robot) ->
   robot.hear /^asgard-launcher clear$/, (msg) ->
     robot.brain.remove amiBrain
     msg.send "Cleared saved values for Asgard AMI and Asgard Security Group."
+
+  # Get the URL
+  robot.hear /^asgard-launcher url$/, (msg) ->
+    async.waterfall [
+      (callback) ->
+        getInstanceIds msg, callback
+      (data, callback) ->
+        getInstancePublicDnsName msg, data.InstanceId, callback
+    ], (err, result) ->
+      if err
+        msg.send "Oops: #{err}"
+
 
   # Update the security group 'asgard-hubot' to allow access to 8080 for <ip>
   robot.hear /^asgard-launcher authorize ([\d/\.+]{7,18})$/, (msg) ->

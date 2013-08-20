@@ -72,7 +72,7 @@ runAsgard = (msg, asgardAmi, callback) ->
       instanceId = response.data.Instances[0].InstanceId
       msg.send "Pending instance: #{instanceId}"
       msg.send "Use 'asgard-launcher url' to retrieve the PublicDnsName."
-      callback(null, null))
+      callback(null, {InstanceId: instanceId}))
     .send()
 
 authorizeIp = (msg, ip) ->
@@ -159,6 +159,8 @@ module.exports = (robot) ->
       (callback) ->
         asgardAmi = robot.brain.get(amiBrain) or netflixossAmi
         runAsgard msg, asgardAmi, callback
+      (data, callback) ->
+        addInstanceNameTag msg, data.InstanceId, callback
     ], (err, result) ->
       if err
         msg.send "Oops: #{err}"

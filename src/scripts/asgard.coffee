@@ -14,6 +14,8 @@
 #   asgard ami <id> - Show details for ami ID (ami-[a-f0-9]{8})
 #   asgard application - List applications per region
 #   asgard autoscaling <name> - Show details for autoscaling group <name>
+#   ##asgard autoscaling <name> <minSize> <maxSize - Change the min/max size for an ASG
+#   asgard cluster - List clusters per region
 #   asgard cluster <name> - Show details for cluster <name>
 #   asgard instance - List instances per region
 #   asgard instance <app> - List instances per <app> per region
@@ -21,6 +23,7 @@
 #   asgard loadbalancer - List loadbalancers per region
 #   asgard region <region> - Get/set the asgard region
 #   asgard rollingpush <asg> <ami> - Start a rolling push of <ami> into <asg>
+#   asgard next <cluster> <ami> - Create the next autoscaling group using <ami>
 #   asgard task <id> - Show details for a given task
 #   asgard url <url> - Get/set the asgard base url
 #
@@ -57,6 +60,7 @@ getTemplate = (templateItem) ->
 asgardGetData = (msg, path, callback) ->
   msg.http(getBaseUrl() + path)
     .get() (err, res, body) ->
+      console.log body
       callback null, JSON.parse(body)
 
 asgardPostData = (msg, path, params, callback) ->
@@ -65,11 +69,12 @@ asgardPostData = (msg, path, params, callback) ->
     .headers("Accept:": "*/*", "Content-Type": "application/x-www-form-urlencoded", "Content-Length": params.length)
     .post(params) (err, res, body) ->
       console.log res
-      callback null, res 
+      callback null, res
 
 asgardGet = (msg, path, templateItem) ->
   msg.http(getBaseUrl() + path)
     .get() (err, res, body) ->
+      console.log JSON.parse(body)
       msg.send response JSON.parse(body), getTemplate templateItem
 
 response = (dataIn, template) ->
@@ -116,6 +121,21 @@ module.exports = (robot) ->
     path = item + "/show/#{msg.match[3]}.json"
     asgardGet msg, path, item
 
+  # Autoscaling group min-max update
+  robot.hear /^(asgard|a) (autoscaling|as) ([\w\d-]+) ([\d]+) ([\d]+)$/, (msg) ->
+    path = 'cluster/resize'
+    params = "name=#{msg.match[3]}&minSize=#{msg.match[4]}&maxSize=#{msg.match[5]}"
+    console.log params
+    asgardPostData msg, path, params, (err, data) ->
+      console.log err
+      console.log data
+      if data.statusCode == 302
+        location = data.headers.location
+        taskId = location.substr location.lastIndexOf "/"
+        msg.send getBaseUrl()+"task/show/#{taskId} or 'asgard task #{taskId}'"
+      else
+        msg.send "Oops: #{err}"
+ 
   robot.hear /^(asgard|a) url( (.*))?$/, (msg) ->
     if msg.match[3]
       asgardUrl = msg.match[3]

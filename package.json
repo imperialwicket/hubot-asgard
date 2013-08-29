@@ -1,8 +1,8 @@
 {
   "name": "hubot-asgard",
-  "main": "./lib/aws.js",
   "version": "0.1.1",
   "description": "Asgard API wrapper for Hubot with utility functions for launching Asgard instances.",
+  "main": "index.coffee",
   "dependencies": {
     "hubot": ">= 2.4.0",
     "eco": ">=1.1.0-rc-3",
@@ -13,7 +13,6 @@
     "node": ">=0.10.15",
     "npm": ">=1.3.5"
   },
-  "main": "index.coffee",
   "homepage": "https://github.com/imperialwicket/hubot-asgard",
   "author": {
     "name": "Nicholas Whittier",

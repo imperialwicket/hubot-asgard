@@ -22,7 +22,7 @@ If you want a more hands-off approach, hubot-asgard comes bundled with some asga
     asgard-launcher authorize <HUBOT_IP>
     asgard-launcher authorize <YOUR_IP>
 
-After configuring your Asgard instance (via web browser), you can elect to save a private AMI that includes your configured AWS credentials with:
+After configuring your Asgard instance via web browser, save a private AMI that includes your configured AWS credentials. Note that it is recommended to disable public AMIs when initially configuring your Asgard instance. If you need public AMIs be careful with the ami listing requests, as they may exceed message size limitations (and currenlty do not batch).
 
     asgard-launcher create ami
 

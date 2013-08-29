@@ -14,7 +14,7 @@
 #   asgard ami <id> - Show details for ami ID (ami-[a-f0-9]{8})
 #   asgard application - List applications per region
 #   asgard autoscaling <name> - Show details for autoscaling group <name>
-#   ##asgard autoscaling <name> <minSize> <maxSize - Change the min/max size for an ASG
+#   asgard autoscaling <name> <minSize> <maxSize - Change the min/max size for an ASG
 #   asgard cluster - List clusters per region
 #   asgard cluster <name> - Show details for cluster <name>
 #   asgard instance - List instances per region

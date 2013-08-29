@@ -189,7 +189,7 @@ module.exports = (robot) ->
       (_, callback) ->
         asgardAmi = robot.brain.get(brain.image) or asgardAmi
         asgardInstanceType = robot.brain.get(brain.instanceType) or instanceType
-        runAsgard msg, asgardAmi, callback
+        runAsgard msg, asgardAmi, asgardInstanceType, callback
       (data, callback) ->
         addInstanceNameTag msg, data.InstanceId, callback
     ], (err, result) ->

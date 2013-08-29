@@ -13,9 +13,9 @@ hubot-asgard
 
 ## Requirements
 
-[Asgard](https://github.com/Netflix/asgard) needs to be running somewhere, and Hubot needs to be able to access it. Hubot-asgard does not allow self-signed SSL certs, so if you are using an un-altered instance based on [these](http://imperialwicket.com/netflix-asgard-12-ami-updates), make sure to hit port 8080 directly, instead of using the SSL proxy. Also note that Hubot-asgard does not currently support basic authentication, another reason to hit 8080 directly.
+[Asgard](https://github.com/Netflix/asgard) needs to be running somewhere, and Hubot needs to be able to access it. You can launch manually on AWS with a [NetflixOSS AMI](http://netflix.github.io/#amis) or one of [these](http://imperialwicket.com/netflix-asgard-12-ami-updates).
 
-If you do not have an Asgard instance, you should install both of the asgard.coffee and asgard-launcher.coffee scripts. Asgard-launcher is an AWS-centric launch utility for Asgard. After configuration in Hubot, you can launch a new Asgard instance as follows:
+If you want a more hands-off approach, hubot-asgard comes bundled with some asgard-launcher commands. These are AWS-centric launch utilities for Asgard. After configuration in Hubot, you can launch a new Asgard instance as follows:
 
     asgard-launcher run
     asgard-launcher url
@@ -32,22 +32,28 @@ If you want to shutdown the instance, use:
 
 If you created an ami, asgard-launcher will use that ami for future `asgard-launcher run` requests. If not, it will launch the default ami (requiring configuration) each time.
 
+Asgard-launcher defaults to launching the NetflixOSS AMI on an m1.small instance. Use `asgard-launcher ami <ami-id>` and `asgard-launcher instance type <instance-type>` to override these defaults. 
+
 
 ## Installation
 
-Until hubot-asgard is more mature, it's not going to be available via npm or github/hubot-scripts. None of the github/hubot-scripts use templates and this seems a little problematic; once the directory structure and more of the core functionality is final, I will get things in npm.
+Update Hubot's package.json to install hubot-asgard from npm, and update Hubot's external-scripts.json file to include the hubot-asgard module.
 
-Hubot-asgard requires 'eco' (>= 1.1.0) and 'async' (>= 0.2.9). I'm not doing anything cutting edge, and it will probably work with older versions, but I have not tested them. Asgard-launcher is bundled here, and it requires 'aws-sdk' (>=1.5.0) to help with launching and managing the Asgard instance and supporting AWS objects. 
+### Update the files to include the hubot-asgard module:
 
-For now, you will need to add the src/scripts/asgard.coffee to your Hubot scripts (and optionally src/scripts/asgard-launcher.coffee) and create the src/templates directory for Hubot. Depending on your configuration, something like this might work:
+#### package.json
+    ...
+    "dependencies": {
+      "hubot":        ">= 2.4.0 < 3.0.0",
+      ...
+      "hubot-asgard": ">= 0.1.1"
+    },
+    ...
 
-    HUBOT_DIR=/path/to/hubot/
-    cd ~
-    git clone https://github.com/imperialwicket/hubot-asgard.git
-    cd $HUBOT_DIR
-    npm install eco async
-    ln -s ~/hubot-asgard/src/scripts/asgard.coffee $HUBOT_DIR/scripts/asgard.coffee
-    ln -s ~/hubot-asgard/src/templates/ $HUBOT_DIR/templates
+#### external-scripts.json
+    ["hubot-awesome-module","other-cool-npm-script","hubot-asgard"]
+
+Run `npm install` to install hubot-asgard and dependencies.
 
 
 ## Configuration options
@@ -61,7 +67,7 @@ You can retrieve and update these values with Hubot via:
     asgard region us-west-2
     asgard region
 
-If you are using asgard-launcher.coffee, you must set AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY environment variables for successful aws-sdk configuration.
+If you plan to use asgard-launcher, you must set AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY environment variables for successful aws-sdk configuration.
 
 
 ## Practical Use

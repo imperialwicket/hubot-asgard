@@ -1,6 +1,6 @@
 {
   "name": "hubot-asgard",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Asgard API wrapper for Hubot with utility functions for launching Asgard instances.",
   "main": "index.coffee",
   "dependencies": {
@@ -23,8 +23,12 @@
     "url": "git://github.com/imperialwicket/hubot-asgard.git"
   },
   "bugs": {
-    "url": "http://github.com/imperialwicket/hubot-asgard/issues"
+    "url": "https://github.com/imperialwicket/hubot-asgard/issues"
   },
+  "license": {
+    "type": "Apache License, Version 2.0",
+    "url": "https://www.apache.org/licenses/LICENSE-2.0.html"
+  }
   "keywords": [
     "amazon",
     "asgard",

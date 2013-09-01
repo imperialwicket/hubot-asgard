@@ -23,7 +23,7 @@
 #   asgard loadbalancer - List loadbalancers per region
 #   asgard region <region> - Get/set the asgard region
 #   asgard rollingpush <asg> <ami> - Start a rolling push of <ami> into <asg>
-#   asgard next <cluster> <ami> - Create the next autoscaling group using <ami>
+#   asgard next <cluster> <ami> <true|false> - Create the next autoscaling group using <ami> with trafficEnabled true|false.
 #   asgard task <id> - Show details for a given task
 #   asgard url <url> - Get/set the asgard base url
 #
@@ -162,7 +162,16 @@ module.exports = (robot) ->
         callback null, taskId
     ], (err, result) ->
       if err
-        console.error err
+        console.log err
       else
         msg.send getBaseUrl()+"task/show/#{result} or 'asgard task #{result}'"
 
+  robot.hear /^(asgard|a) (next) ([\w\d-]+) (ami-[a-f0-9]{8})( (true|false))?$/, (msg) ->
+    cluster = msg.match[3]
+    ami = msg.match[4]
+    traffic = if (msg.match[6]) then msg.match[6] else 'true'
+    params = "name=#{cluster}&imageId=#{ami}&trafficAllowed=#{traffic}&checkHealth=true"
+    path = "cluster/createNextGroup"
+    asgardPostData msg, path, params, (err, data) ->
+      console.log err
+      console.log data

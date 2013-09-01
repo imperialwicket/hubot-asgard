@@ -37,8 +37,7 @@ eco = require "eco"
 fs  = require "fs"
 
 getBaseUrl = ->
-  separator = if (asgardUrl.slice(-1)) == '/' then '' else '/'
-  return asgardUrl + separator + region + '/'
+  return asgardUrl + region + '/'
 
 getAsgardName = (name) ->
   asgardName = switch
@@ -138,7 +137,7 @@ module.exports = (robot) ->
  
   robot.hear /^(asgard|a) url( (.*))?$/, (msg) ->
     if msg.match[3]
-      asgardUrl = msg.match[3]
+      asgardUrl = if (msg.match[3].slice(-1)) == '/' then msg.match[3] else "#{msg.match[3]}/"
       robot.brain.set 'asgardUrl', asgardUrl
 
     msg.send "URL is #{asgardUrl}."

@@ -67,7 +67,7 @@ asgardPostData = (msg, path, params, callback) ->
   msg.http(getBaseUrl() + path)
     .headers("Accept:": "*/*", "Content-Type": "application/x-www-form-urlencoded", "Content-Length": params.length)
     .post(params) (err, res, body) ->
-      console.log res
+      #console.log res
       callback null, res
 
 asgardGet = (msg, path, templateItem) ->
@@ -169,13 +169,13 @@ module.exports = (robot) ->
   robot.hear /^(asgard|a) (next) ([\w\d-]+) (ami-[a-f0-9]{8})( (true|false))?$/, (msg) ->
     cluster = msg.match[3]
     ami = msg.match[4]
-    traffic = if (msg.match[6]) then msg.match[6] else 'true'
-    params = "name=#{cluster}&imageId=#{ami}&trafficAllowed=#{traffic}&checkHealth=true"
+    traffic = if (msg.match[6] && msg.match[6] == true) then "&trafficAllowed=true" else ''
+    params = "name=#{cluster}&imageId=#{ami}&checkHealth=true#{traffic}"
     path = "cluster/createNextGroup"
     async.waterfall [
       (callback) ->
         asgardPostData msg, path, params, callback
-      (data, callback) ->
+      (result, callback) ->
         if result.statusCode == 302
           location = result.headers.location
           taskId = location.substr location.lastIndexOf "/"

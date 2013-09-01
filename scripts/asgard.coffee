@@ -172,6 +172,18 @@ module.exports = (robot) ->
     traffic = if (msg.match[6]) then msg.match[6] else 'true'
     params = "name=#{cluster}&imageId=#{ami}&trafficAllowed=#{traffic}&checkHealth=true"
     path = "cluster/createNextGroup"
-    asgardPostData msg, path, params, (err, data) ->
-      console.log err
-      console.log data
+    async.waterfall [
+      (callback) ->
+        asgardPostData msg, path, params, callback
+      (data, callback) ->
+        if result.statusCode == 302
+          location = result.headers.location
+          taskId = location.substr location.lastIndexOf "/"
+
+        callback null, taskId
+    ], (err, result) ->
+      if err
+        console.log err
+      else
+        msg.send getBaseUrl()+"task/show/#{result} or 'asgard task #{result}'"
+ 

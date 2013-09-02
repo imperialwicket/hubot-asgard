@@ -137,7 +137,7 @@ module.exports = (robot) ->
     params = "name=#{msg.match[3]}&minSize=#{msg.match[4]}&maxSize=#{msg.match[5]}"
     asgardPostData msg, path, params, (err, data) ->
       if data.statusCode == 302
-        asgardCreateTaskMsg data.headers.location, callback
+        asgardCreateTaskMsg msg, data.headers.location, callback
       else
         msg.send "Oops: #{err}"
  

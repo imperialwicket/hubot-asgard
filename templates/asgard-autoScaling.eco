@@ -9,7 +9,7 @@
   App: <%= @data.variables.app %>
   InstanceCount: <%= @data.instanceCount %>
   Min/Des/Max: <%= @data.group.minSize %>/<%= @data.group.desiredCapacity %>/<%= @data.group.maxSize %>
-  Active: <%= @data.group.addingToLoadBalancerSuspended %>
+  Suspended: <%= @data.group.addingToLoadBalancerSuspended %>
 <% else if @data.error: %>
   Error: <%= @data.error %>
 <% else: %>

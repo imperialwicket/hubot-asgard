@@ -44,7 +44,7 @@ asgardAmi = netflixossAmi
 instanceType = 'm1.small'
 sgName = imageName = instanceName = 'asgard-hubot'
 brain = { image: 'asgardAmi', instanceType: 'asgardInstanceType' }
-debug = true
+debug = process.env.HUBOT_ASGARD_DEBUG or false
 
 async = require 'async'
 aws = require 'aws-sdk'

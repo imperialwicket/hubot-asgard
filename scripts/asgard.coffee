@@ -191,7 +191,7 @@ module.exports = (robot) ->
   robot.hear /^(asgard|a) (autoscaling|as) (activate|deactivate|delete) ([\w\d-]+)$/, (msg) ->
     asg = msg.match[4]
     params = "name=#{asg}"
-    path = "cluster/#{msg.match[3]"
+    path = "cluster/#{msg.match[3]}"
     async.waterfall [
       (callback) ->
         asgardPostData msg, path, params, callback

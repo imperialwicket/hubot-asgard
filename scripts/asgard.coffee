@@ -32,10 +32,15 @@
 
 asgardUrl = process.env.HUBOT_ASGARD_URL or 'http://127.0.0.1'
 region = process.env.HUBOT_ASGARD_REGION or 'us-east-1'
+debug = process.env.HUBOT_ASGARD_DEBUG or false
 
 async = require "async"
 eco = require "eco"
 fs  = require "fs"
+
+log = (event) ->
+  if debug
+    console.log event
 
 getBaseUrl = ->
   return asgardUrl + region + '/'
@@ -60,27 +65,25 @@ getTemplate = (templateItem) ->
 asgardGetData = (msg, path, callback) ->
   msg.http(getBaseUrl() + path)
     .get() (err, res, body) ->
-      console.log body
+      log body
       callback null, JSON.parse(body)
 
 asgardPostData = (msg, path, params, callback) ->
-  console.log 'curl -d "'+params+'" '+getBaseUrl() + path
+  log 'curl -d "'+params+'" '+getBaseUrl() + path
   msg.http(getBaseUrl() + path)
     .headers("Accept:": "*/*", "Content-Type": "application/x-www-form-urlencoded", "Content-Length": params.length)
     .post(params) (err, res, body) ->
-      #console.log res
+      log res
       callback null, res
 
 asgardGet = (msg, path, templateItem) ->
   msg.http(getBaseUrl() + path)
     .get() (err, res, body) ->
-      console.log JSON.parse(body)
+      log JSON.parse(body)
       msg.send response JSON.parse(body), getTemplate templateItem
 
 asgardCreateTaskMsg = (msg, location, callback) ->
-  console.log location
   taskId = location.substr(location.lastIndexOf("/")+1)
-  console.log taskId
   msg.send getBaseUrl()+"task/show/#{taskId} or 'asgard task #{taskId}'"
   callback null, null
 
@@ -132,10 +135,7 @@ module.exports = (robot) ->
   robot.hear /^(asgard|a) (autoscaling|as) ([\w\d-]+) ([\d]+) ([\d]+)$/, (msg) ->
     path = 'cluster/resize'
     params = "name=#{msg.match[3]}&minSize=#{msg.match[4]}&maxSize=#{msg.match[5]}"
-    console.log params
     asgardPostData msg, path, params, (err, data) ->
-      console.log err
-      console.log data
       if data.statusCode == 302
         asgardCreateTaskMsg data.headers.location, callback
       else
@@ -161,10 +161,11 @@ module.exports = (robot) ->
         path = "push/startRolling"
         asgardPostData msg, path, params, callback
       (data, callback) ->
-        if result.statusCode == 302
-          asgardCreateTaskMsg data.headers.location, callback
+        if data.statusCode == 302
+          asgardCreateTaskMsg msg, data.headers.location, callback
+        else
+          callback "Unexpected result data: #{data}", null
 
-        callback "Unexpected result data: #{data}", null
     ], (err, result) ->
       if err
         console.log err
@@ -179,8 +180,8 @@ module.exports = (robot) ->
       (callback) ->
         asgardPostData msg, path, params, callback
       (data, callback) ->
-        if result.statusCode == 302
-          asgardCreateTaskMsg data.headers.location, callback
+        if data.statusCode == 302
+          asgardCreateTaskMsg msg, data.headers.location, callback
         else
           callback "Unexpected result statusCode: #{data}", null
         
@@ -196,8 +197,8 @@ module.exports = (robot) ->
       (callback) ->
         asgardPostData msg, path, params, callback
       (data, callback) ->
-        if result.statusCode == 302
-          asgardCreateTaskMsg data.headers.location, callback
+        if data.statusCode == 302
+          asgardCreateTaskMsg msg, data.headers.location, callback
         else
           callback "Unexpected result statusCode: #{data}", null
 

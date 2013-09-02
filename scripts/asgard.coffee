@@ -84,7 +84,7 @@ asgardGet = (msg, path, templateItem) ->
 
 asgardCreateTaskMsg = (msg, location, callback) ->
   taskId = location.substr(location.lastIndexOf("/")+1)
-  msg.send getBaseUrl()+"task/show/#{taskId} or 'asgard task #{taskId}'"
+  msg.send "'asgard task #{taskId}' or " + getBaseUrl() + "task/show/#{taskId}"
   callback null, null
 
 response = (dataIn, template) ->

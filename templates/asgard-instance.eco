@@ -1,6 +1,7 @@
 <% if @data.length: %><% for i in @data: %>
   InstanceId: <%= i.instanceId %>
   AppName(instance): <%= i.appName %>(<%= i.appInstance %>)
+  ImageId: <%= i.imageId %>
   PrivateDns: <%= i.ec2Instance.privateDnsName %>
   PublicDns: <%= i.ec2Instance.publicDnsName %>
   Status: <%= i.ec2Instance.state.name %>
@@ -8,6 +9,7 @@
 <% else if @data.instanceId: %>
   Id: <%= @data.instance.instanceId %>
   App: <%= @data.appName %>
+  ImageId: <%= @data.instance.imageId %>
   PrivDns: <%= @data.instance.privateDnsName %>
   PrivIp: <%= @data.instance.privateIpAddress %>
   PubDns: <%= @data.instance.publicDnsName %>

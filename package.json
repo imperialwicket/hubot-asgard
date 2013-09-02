@@ -1,6 +1,6 @@
 {
   "name": "hubot-asgard",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Asgard API wrapper for Hubot with utility functions for launching Asgard instances.",
   "main": "index.coffee",
   "dependencies": {

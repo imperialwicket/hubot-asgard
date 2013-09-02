@@ -6,6 +6,7 @@
   Name: <%= c.autoScalingGroupName %>
   Instances (current/max): <%= c.instances.length %>/<%= c.maxSize %>
   LC: <%= c.launchConfigurationName %>
+  LoadBalancer Suspended: <%= c.addingToLoadBalancerSuspended %>
   <% end %>
 <% else if @data.error: %>
   Error: <%= @data.error %>

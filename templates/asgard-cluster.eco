@@ -2,7 +2,7 @@
   Cluster: <%= c.cluster %>
   AutoScalingGroups:<% for a in c.autoScalingGroups: %> <%= a %><% end %>
   <% end %>
-<% else if @data.class: %><% for c in @data: %>
+<% else if @data[0].class: %><% for c in @data: %>
   Name: <%= c.autoScalingGroupName %>
   Instances (current/max): <%= c.instances.length %>/<%= c.maxSize %>
   LC: <%= c.launchConfigurationName %>

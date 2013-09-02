@@ -15,6 +15,7 @@
 #   asgard application - List applications per region
 #   asgard autoscaling <name> - Show details for autoscaling group <name>
 #   asgard autoscaling <name> <minSize> <maxSize - Change the min/max size for an ASG
+#   asgard autoscaling (enable|disable|delete) <name> - Enable, disable or delete an ASG
 #   asgard cluster - List clusters per region
 #   asgard cluster <name> - Show details for cluster <name>
 #   asgard instance - List instances per region
@@ -76,6 +77,13 @@ asgardGet = (msg, path, templateItem) ->
       console.log JSON.parse(body)
       msg.send response JSON.parse(body), getTemplate templateItem
 
+asgardCreateTaskMsg = (msg, location, callback) ->
+  console.log location
+  taskId = location.substr(location.lastIndexOf("/")+1)
+  console.log taskId
+  msg.send getBaseUrl()+"task/show/#{taskId} or 'asgard task #{taskId}'"
+  callback null, null
+
 response = (dataIn, template) ->
   return eco.render template, data: dataIn
 
@@ -129,9 +137,7 @@ module.exports = (robot) ->
       console.log err
       console.log data
       if data.statusCode == 302
-        location = data.headers.location
-        taskId = location.substr location.lastIndexOf "/"
-        msg.send getBaseUrl()+"task/show/#{taskId} or 'asgard task #{taskId}'"
+        asgardCreateTaskMsg data.headers.location, callback
       else
         msg.send "Oops: #{err}"
  
@@ -154,17 +160,14 @@ module.exports = (robot) ->
         params = "name=#{asg}&appName=#{data.app.name}&imageId=#{ami}&instanceType=#{data.launchConfiguration.instanceType}&keyName=#{data.launchConfiguration.keyName}&#{sg}&relaunchCount=#{data.group.desiredCapacity}&concurrentRelaunches=1&newestFirst=false&checkHealth=on&afterBootWait=30"
         path = "push/startRolling"
         asgardPostData msg, path, params, callback
-      (result, callback) ->
+      (data, callback) ->
         if result.statusCode == 302
-          location = result.headers.location
-          taskId = location.substr location.lastIndexOf "/"
+          asgardCreateTaskMsg data.headers.location, callback
 
-        callback null, taskId
+        callback "Unexpected result data: #{data}", null
     ], (err, result) ->
       if err
         console.log err
-      else
-        msg.send getBaseUrl()+"task/show/#{result} or 'asgard task #{result}'"
 
   robot.hear /^(asgard|a) (next) ([\w\d-]+) (ami-[a-f0-9]{8})( (true|false))?$/, (msg) ->
     cluster = msg.match[3]
@@ -175,15 +178,29 @@ module.exports = (robot) ->
     async.waterfall [
       (callback) ->
         asgardPostData msg, path, params, callback
-      (result, callback) ->
+      (data, callback) ->
         if result.statusCode == 302
-          location = result.headers.location
-          taskId = location.substr location.lastIndexOf "/"
-
-        callback null, taskId
+          asgardCreateTaskMsg data.headers.location, callback
+        else
+          callback "Unexpected result statusCode: #{data}", null
+        
     ], (err, result) ->
       if err
         console.log err
-      else
-        msg.send getBaseUrl()+"task/show/#{result} or 'asgard task #{result}'"
  
+  robot.hear /^(asgard|a) (autoscaling|as) (activate|deactivate|delete) ([\w\d-]+)$/, (msg) ->
+    asg = msg.match[4]
+    params = "name=#{asg}"
+    path = "cluster/#{msg.match[3]"
+    async.waterfall [
+      (callback) ->
+        asgardPostData msg, path, params, callback
+      (data, callback) ->
+        if result.statusCode == 302
+          asgardCreateTaskMsg data.headers.location, callback
+        else
+          callback "Unexpected result statusCode: #{data}", null
+
+    ], (err, result) ->
+      if err
+        console.log err

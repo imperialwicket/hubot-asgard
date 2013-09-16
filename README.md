@@ -22,7 +22,7 @@ If you want a more hands-off approach, hubot-asgard comes bundled with some asga
     asgard-launcher authorize <HUBOT_IP>
     asgard-launcher authorize <YOUR_IP>
 
-After configuring your Asgard instance via web browser, save a private AMI that includes your configured AWS credentials. Note that it is recommended to disable public AMIs when initially configuring your Asgard instance. If you need public AMIs be careful with the ami listing requests, as they may exceed message size limitations (and currenlty do not batch).
+After configuring your Asgard instance via web browser, save a private AMI that includes your configured AWS credentials. Note that it is recommended to disable public AMIs when initially configuring your Asgard instance. If you need public AMIs be careful with the ami listing requests, as they may exceed message size limitations (and currently do not batch).
 
     asgard-launcher create ami
 
@@ -105,7 +105,7 @@ Hubot-asgard returns data via ([eco](https://github.com/sstephenson/eco)) templa
 
 ## Todo
 
-* Right now the API wrapping is highest priority; mainly next asg creation and asg edits
-* Second is nomenclature and making sure that commands make sense and have consistency
 * List size checking, response batching. Need basic safety checks in case someone tries to get the list of all AMIs in us-east-1 (or has very large systems).
 * Implement roles - Use HUBOT admin, or entirely separate roles? Probably both.
+* Refine templating
+* Wrap additional services

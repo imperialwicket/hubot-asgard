@@ -15,7 +15,7 @@
 #   asgard application - List applications per region
 #   asgard autoscaling <name> - Show details for autoscaling group <name>
 #   asgard autoscaling <name> <minSize> <maxSize - Change the min/max size for an ASG
-#   asgard autoscaling (enable|disable|delete) <name> - Enable, disable or delete an ASG
+#   asgard autoscaling (activate|deactive|delete) <name> - Enable, disable or delete an ASG
 #   asgard cluster - List clusters per region
 #   asgard cluster <name> - Show details for cluster <name>
 #   asgard instance - List instances per region

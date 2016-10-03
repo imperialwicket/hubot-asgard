@@ -71,7 +71,7 @@ asgardGetData = (msg, path, callback) ->
 asgardPostData = (msg, path, params, callback) ->
   log 'curl -d "'+params+'" '+getBaseUrl() + path
   msg.http(getBaseUrl() + path)
-    .headers("Accept:": "*/*", "Content-Type": "application/x-www-form-urlencoded", "Content-Length": params.length)
+    .headers("Accept": "*/*", "Content-Type": "application/x-www-form-urlencoded", "Content-Length": params.length)
     .post(params) (err, res, body) ->
       log res
       callback null, res
@@ -143,7 +143,7 @@ module.exports = (robot) ->
 
       else
         msg.send "Oops: #{err}"
- 
+
   robot.hear /^(asgard|a) url( (.*))?$/, (msg) ->
     if msg.match[3]
       asgardUrl = if (msg.match[3].slice(-1)) == '/' then msg.match[3] else "#{msg.match[3]}/"
@@ -187,11 +187,11 @@ module.exports = (robot) ->
           asgardCreateTaskMsg msg, data.headers.location, callback
         else
           callback "Unexpected result statusCode: #{data}", null
-        
+
     ], (err, result) ->
       if err
         console.log err
- 
+
   robot.hear /^(asgard|a) (autoscaling|as) (activate|deactivate|delete) ([\w\d-]+)$/, (msg) ->
     asg = msg.match[4]
     params = "name=#{asg}"
